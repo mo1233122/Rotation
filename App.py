@@ -109,7 +109,7 @@ def berechne_rotation_fuer_datum(ziel_datum: date, daten: dict):
 
 
 # ---------------------------------------------------------
-# Page Setup & Modern Grey Dark CSS
+# Page Setup & Greige / Eggshell Styling
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="Patho ServiceMGMT Rotation", page_icon="📅", layout="centered"
@@ -118,25 +118,110 @@ st.set_page_config(
 st.markdown(
     """
 <style>
-    /* Haupt-Hintergrund im Modern Dark Grey Style */
+    /* Warmes Eggshell/Greige Theme */
     .stApp {
-        background-color: #121417;
-        color: #e2e8f0;
+        background-color: #f4f1ea;
+        color: #2c2a29;
     }
-    
-    /* Einzeilige Überschrift */
+
     .header-title {
         text-align: center;
-        color: #f8fafc;
+        color: #2c2a29;
         font-weight: 700;
-        font-size: clamp(1.2rem, 4vw, 1.8rem);
+        font-size: clamp(1.4rem, 4vw, 1.9rem);
         white-space: nowrap;
-        margin-top: -10px;
+        margin-top: -15px;
         margin-bottom: 25px;
         letter-spacing: -0.5px;
     }
-    
-    /* Rollenkarten Grid */
+
+    /* Kalender-Card */
+    .calendar-card {
+        background-color: #efece6;
+        border-radius: 20px;
+        padding: 24px 20px 16px 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+        border: 1px solid #e2ddd5;
+        margin-bottom: 25px;
+    }
+
+    /* Monatszeile & Pfeile */
+    .month-header {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1f1e1d;
+    }
+
+    /* Kalender Grid CSS */
+    .cal-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        text-align: center;
+        margin-top: 15px;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .cal-header-cell {
+        font-weight: 700;
+        font-size: 0.95rem;
+        padding: 10px 0;
+        color: #4a4744;
+    }
+    .cal-header-cell.weekend {
+        background-color: #e5e0d8;
+        color: #383533;
+    }
+
+    .cal-day-cell {
+        padding: 10px 0;
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: #2c2a29;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+    }
+    .cal-day-cell.weekend {
+        background-color: #e5e0d8;
+        color: #6e6963;
+    }
+    .cal-day-cell.empty {
+        opacity: 0.15;
+    }
+
+    /* Streamlit PfeilbuttonsStyling */
+    div[data-testid="stHorizontalBlock"] div.stButton > button {
+        border-radius: 8px !important;
+        background-color: #ff2a55 !important;
+        color: white !important;
+        border: none !important;
+        font-weight: bold !important;
+        box-shadow: 0 3px 8px rgba(255, 42, 85, 0.3) !important;
+    }
+    div[data-testid="stHorizontalBlock"] div.stButton > button:hover {
+        background-color: #e01f47 !important;
+    }
+
+    /* Donnerstags-Buttons (Pill Style wie auf Bild) */
+    .thursday-btn button {
+        background-color: #ff2a55 !important;
+        color: white !important;
+        border-radius: 10px !important;
+        border: none !important;
+        font-weight: 700 !important;
+        padding: 6px 0 !important;
+        width: 85% !important;
+        margin: 0 auto !important;
+        box-shadow: 0 4px 10px rgba(255, 42, 85, 0.25) !important;
+    }
+    .thursday-btn.cancelled button {
+        background-color: #6e6963 !important;
+        box-shadow: none !important;
+    }
+
+    /* Rollenkarten im Greige Look */
     .role-container {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
@@ -145,86 +230,49 @@ st.markdown(
     }
 
     .role-card {
-        background-color: #1e2228;
-        border-radius: 12px;
+        background-color: #efece6;
+        border-radius: 14px;
         padding: 18px 12px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
         text-align: center;
-        border: 1px solid #2d333b;
+        border: 1px solid #e2ddd5;
         border-top: 4px solid #3b82f6;
     }
-    .role-card.mod { border-top-color: #60a5fa; }
-    .role-card.proto { border-top-color: #34d399; }
-    .role-card.pause { border-top-color: #fbbf24; }
+    .role-card.mod { border-top-color: #ff2a55; }
+    .role-card.proto { border-top-color: #10b981; }
+    .role-card.pause { border-top-color: #f59e0b; }
     .role-card.cancelled { 
-        border-top-color: #f87171; 
-        background-color: #261a1a; 
-        border: 1px solid #451a1a;
+        border-top-color: #ef4444; 
+        background-color: #fcf0f0; 
+        border: 1px solid #f87171;
         grid-column: span 3;
     }
-    
+
     .role-title {
-        font-size: 0.85rem;
-        font-weight: 600;
+        font-size: 0.8rem;
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: #94a3b8;
+        letter-spacing: 0.05em;
+        color: #78726a;
         margin-bottom: 6px;
     }
     .role-person {
-        font-size: 1.4rem;
+        font-size: 1.35rem;
         font-weight: 700;
-        color: #f1f5f9;
-        word-break: break-word;
+        color: #1f1e1d;
     }
 
-    /* Kalenderzellen mit klarem vertikalen Abstand */
-    .weekend-cell {
-        background-color: #1a1d24;
-        border-radius: 6px;
-        padding: 8px 0;
-        text-align: center;
-        color: #475569;
-        font-weight: 500;
-        margin-bottom: 8px;
-    }
-    .weekday-cell {
-        text-align: center;
-        padding: 8px 0;
-        color: #94a3b8;
-        margin-bottom: 8px;
-    }
-    .header-day {
-        text-align: center;
-        color: #cbd5e1;
-        font-weight: 600;
-        margin-bottom: 8px;
-    }
-    .header-weekend {
-        text-align: center;
-        color: #64748b;
-        font-weight: 600;
-        margin-bottom: 8px;
-    }
-
-    /* Streamlit Buttons styling */
-    div.stButton > button {
-        margin-bottom: 8px !important;
-    }
-
+    /* Formularelemente in hellen Farben */
     div[data-baseweb="select"] > div, div[data-baseweb="input"] > div {
-        background-color: #1e2228 !important;
-        color: #f8fafc !important;
-        border-color: #2d333b !important;
+        background-color: #ffffff !important;
+        color: #2c2a29 !important;
+        border-color: #d6d0c4 !important;
+        border-radius: 8px !important;
     }
 
     @media (max-width: 640px) {
-        .role-container {
-            grid-template-columns: 1fr;
-        }
-        .role-card.cancelled {
-            grid-column: span 1;
-        }
+        .role-container { grid-template-columns: 1fr; }
+        .role-card.cancelled { grid-column: span 1; }
     }
 </style>
 """,
@@ -237,106 +285,119 @@ st.markdown(
 )
 
 # ---------------------------------------------------------
-# Monats- & Jahresauswahl
+# Monats- & Jahres-Navigation über Pfeiltasten
 # ---------------------------------------------------------
 heute = date.today()
-col_m, col_y = st.columns(2)
 
-with col_m:
-    monate = [
-        "Januar",
-        "Februar",
-        "März",
-        "April",
-        "Mai",
-        "Juni",
-        "Juli",
-        "August",
-        "September",
-        "Oktober",
-        "November",
-        "Dezember",
-    ]
-    ausgewaehlter_monat_idx = st.selectbox(
-        "Monat wählen",
-        range(1, 13),
-        index=7 if heute.year == 2026 else heute.month - 1,
-        format_func=lambda x: monate[x - 1],
+if "current_year" not in st.session_state:
+    st.session_state["current_year"] = (
+        2026 if heute.year < 2026 else heute.year
     )
-
-with col_y:
-    ausgewaehltes_jahr = st.number_input(
-        "Jahr wählen", min_value=2026, max_value=2035, value=2026, step=1
+if "current_month" not in st.session_state:
+    st.session_state["current_month"] = (
+        8 if heute.year == 2026 else heute.month
     )
-
-st.divider()
-
-# Session State initialisieren
 if "selected_date" not in st.session_state:
     st.session_state["selected_date"] = None
 if "edit_mode" not in st.session_state:
     st.session_state["edit_mode"] = False
 
+monate_namen = [
+    "Januar",
+    "Februar",
+    "März",
+    "April",
+    "Mai",
+    "Juni",
+    "Juli",
+    "August",
+    "September",
+    "Oktober",
+    "November",
+    "Dezember",
+]
+
+# Monatsanzeige und Buttons wie im Referenzbild
+col_title, col_prev, col_next = st.columns([6, 1, 1])
+
+with col_title:
+    st.markdown(
+        f"<div class='month-header'>{monate_namen[st.session_state['current_month'] - 1]} {st.session_state['current_year']}</div>",
+        unsafe_allow_html=True,
+    )
+
+with col_prev:
+    if st.button("❮", key="prev_month"):
+        if st.session_state["current_month"] == 1:
+            st.session_state["current_month"] = 12
+            st.session_state["current_year"] -= 1
+        else:
+            st.session_state["current_month"] -= 1
+        st.rerun()
+
+with col_next:
+    if st.button("❯", key="next_month"):
+        if st.session_state["current_month"] == 12:
+            st.session_state["current_month"] = 1
+            st.session_state["current_year"] += 1
+        else:
+            st.session_state["current_month"] += 1
+        st.rerun()
+
 # ---------------------------------------------------------
-# Kalender-Darstellung
+# Nahtloses Kalender-Grid (Wochenende rechts leicht grau)
 # ---------------------------------------------------------
 cal = calendar.Calendar(firstweekday=0)
 monats_tage = cal.monthdatescalendar(
-    ausgewaehltes_jahr, ausgewaehlter_monat_idx
-)
-
-st.markdown(
-    f"### 📅 {monate[ausgewaehlter_monat_idx - 1]} {ausgewaehltes_jahr}"
+    st.session_state["current_year"], st.session_state["current_month"]
 )
 
 # Wochentage Header
 cols_header = st.columns(7)
-wochentage_kurz = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
+wochentage_kurz = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]
+
 for i, col in enumerate(cols_header):
-    css_class = "header-weekend" if i >= 5 else "header-day"
+    is_weekend = i >= 5
+    css = "cal-header-cell weekend" if is_weekend else "cal-header-cell"
     col.markdown(
-        f"<div class='{css_class}'>{wochentage_kurz[i]}</div>",
-        unsafe_allow_html=True,
+        f"<div class='{css}'>{wochentage_kurz[i]}</div>", unsafe_allow_html=True
     )
 
-# Tage rendern
+# Tage durchgehen
 for woche in monats_tage:
     cols = st.columns(7)
     for i, tag in enumerate(woche):
         with cols[i]:
-            if tag.month != ausgewaehlter_monat_idx:
+            is_weekend = i >= 5
+            weekend_class = "weekend" if is_weekend else ""
+
+            if tag.month != st.session_state["current_month"]:
                 st.markdown(
-                    "<div class='weekday-cell' style='opacity: 0.15;'>•</div>",
+                    f"<div class='cal-day-cell empty {weekend_class}'>•</div>",
                     unsafe_allow_html=True,
                 )
                 continue
 
             tag_str = tag.isoformat()
             ist_donnerstag = tag.weekday() == 3
-            ist_wochenende = i >= 5
 
             if ist_donnerstag and tag >= START_DATUM:
                 rot = berechne_rotation_fuer_datum(tag, daten)
-                btn_label = f"📌 {tag.day}"
+                btn_class = "cancelled" if rot["ausfall"] else ""
+                btn_label = f"{tag.day}"
 
-                if rot["ausfall"]:
-                    btn_type = "secondary"
-                    btn_label = f"❌ {tag.day}"
-                else:
-                    btn_type = "primary"
-
-                if st.button(btn_label, key=f"btn_{tag_str}", type=btn_type):
+                st.markdown(
+                    f"<div class='thursday-btn {btn_class}'>",
+                    unsafe_allow_html=True,
+                )
+                if st.button(btn_label, key=f"btn_{tag_str}"):
                     st.session_state["selected_date"] = tag
                     st.session_state["edit_mode"] = False
                     st.rerun()
-            elif ist_wochenende:
-                st.markdown(
-                    f"<div class='weekend-cell'>{tag.day}</div>",
-                    unsafe_allow_html=True,
-                )
+                st.markdown("</div>", unsafe_allow_html=True)
             else:
                 st.markdown(
-                    f"<div class='weekday-cell'>{tag.day}</div>",
+                    f"<div class='cal-day-cell {weekend_class}'>{tag.day}</div>",
                     unsafe_allow_html=True,
                 )
 
@@ -357,7 +418,7 @@ if sel_tag:
             f"### Meeting am **{sel_tag.strftime('%d.%m.%Y')}**"
         )
     with head_col2:
-        if st.button("✏️ Bearbeiten"):
+        if st.button("✏️ Bearbeiten", key="edit_btn"):
             st.session_state["edit_mode"] = not st.session_state["edit_mode"]
 
     # --- BEARBEITUNGS-MODUS ---
@@ -370,24 +431,39 @@ if sel_tag:
             )
 
             st.write("**Eingeteilte Personen anpassen:**")
-
             personen_liste = ["Lissi", "Veronika", "Moritz"]
 
-            # Hilfsfunktion zur sicheren Bestimmung des Start-Index
             def get_idx(person_name, default_idx=0):
-                return personen_liste.index(person_name) if person_name in personen_liste else default_idx
+                return (
+                    personen_liste.index(person_name)
+                    if person_name in personen_liste
+                    else default_idx
+                )
 
-            mod_wahl = st.selectbox("🎤 Moderator*in", personen_liste, index=get_idx(rot_info["mod"], 0))
-            proto_wahl = st.selectbox("📝 Protokollant*in", personen_liste, index=get_idx(rot_info["proto"], 1))
-            pause_wahl = st.selectbox("☕ Pause", personen_liste, index=get_idx(rot_info["pause"], 2))
+            mod_wahl = st.selectbox(
+                "🎤 Moderator*in",
+                personen_liste,
+                index=get_idx(rot_info["mod"], 0),
+            )
+            proto_wahl = st.selectbox(
+                "📝 Protokollant*in",
+                personen_liste,
+                index=get_idx(rot_info["proto"], 1),
+            )
+            pause_wahl = st.selectbox(
+                "☕ Pause",
+                personen_liste,
+                index=get_idx(rot_info["pause"], 2),
+            )
 
             speichern_btn = st.form_submit_button("Speichern")
 
             if speichern_btn:
-                # Prüfen, ob eine Person doppelt ausgewählt wurde
                 ausgewaehlt = [mod_wahl, proto_wahl, pause_wahl]
                 if len(set(ausgewaehlt)) < 3 and not ist_ausfall_chk:
-                    st.error("⚠️ Bitte wähle für jede Rolle eine unterschiedliche Person aus!")
+                    st.error(
+                        "⚠️ Bitte wähle für jede Rolle eine unterschiedliche Person aus!"
+                    )
                 else:
                     if ist_ausfall_chk:
                         if sel_str not in daten["ausfaelle"]:
@@ -407,7 +483,9 @@ if sel_tag:
 
                     speichere_daten(daten)
                     st.session_state["edit_mode"] = False
-                    st.success("Erfolgreich gespeichert! Alle nachfolgenden Tage passen sich nun an.")
+                    st.success(
+                        "Erfolgreich gespeichert! Alle nachfolgenden Tage passen sich an."
+                    )
                     st.rerun()
 
     # --- ANZEIGE-MODUS ---
@@ -417,9 +495,9 @@ if sel_tag:
                 """
                 <div class='role-container'>
                     <div class='role-card cancelled'>
-                        <div class='role-title' style='color: #f87171;'>Meeting Status</div>
-                        <div class='role-person' style='color: #fca5a5;'>❌ Abgesagt / Ausfall</div>
-                        <p style='color: #cbd5e1; margin-top: 8px; font-size: 0.85rem;'>
+                        <div class='role-title' style='color: #ef4444;'>Meeting Status</div>
+                        <div class='role-person' style='color: #dc2626;'>❌ Abgesagt / Ausfall</div>
+                        <p style='color: #78726a; margin-top: 8px; font-size: 0.85rem;'>
                             Die Rotation wird für die darauffolgende Woche fortgesetzt.
                         </p>
                     </div>
@@ -450,5 +528,5 @@ if sel_tag:
 
 else:
     st.info(
-        "👈 Klicken Sie auf einen rot markierten Donnerstag (📌) im Kalender, um die Rollenverteilung anzuzeigen."
+        "👈 Klicken Sie auf einen rot markierten Donnerstag im Kalender, um die Rollenverteilung anzuzeigen."
     )
