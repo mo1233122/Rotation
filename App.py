@@ -122,21 +122,18 @@ st.markdown(
         color: #FFFFFF;
     }
 
-    /* Breiterer Container, damit die Überschrift NIEMALS umbricht */
     .main .block-container {
-        max-width: 720px !important;
+        max-width: 680px !important;
         padding-top: 2rem !important;
     }
 
-    /* Überschrift in EINER ZEILE garantiert */
+    /* Überschrift leicht verkleinert, damit sie in einer Zeile Platz hat */
     .header-title {
         color: #FFFFFF;
         font-weight: 800;
-        font-size: 1.8rem;
+        font-size: 1.45rem;
         margin-bottom: 20px;
         white-space: nowrap !important;
-        overflow: hidden;
-        text-overflow: ellipsis;
     }
 
     /* KALENDER CARD WRAPPER */
@@ -330,7 +327,7 @@ monate_namen = [
     "Juli", "August", "September", "Oktober", "November", "Dezember"
 ]
 
-# Title - GARANTIERT EINZEILIG
+# Title - PASST JETZT PERFEKT IN EINE ZEILE
 st.markdown(
     "<h1 class='header-title'>NXP ServiceMGMT Meeting Rotation</h1>",
     unsafe_allow_html=True,
@@ -403,7 +400,6 @@ st.markdown("<div class='cal-divider'></div>", unsafe_allow_html=True)
 if selected_date and selected_date.weekday() == 3:
     rot_info = berechne_rotation_fuer_datum(selected_date, daten)
 
-    # Überschrift alleine in ihrer Zeile
     st.markdown(
         f"<div class='meeting-section-header'>👥 Meeting am {selected_date.strftime('%d.%m.%Y')}</div>",
         unsafe_allow_html=True,
