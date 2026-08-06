@@ -58,14 +58,12 @@ def berechne_rotation_fuer_datum(ziel_datum: date, daten: dict):
     personen = daten.get("personen", STANDARD_PERSONEN)
     n = len(personen)
 
-    # Wir berechnen Schritt für Schritt ab dem START_DATUM bis zum ziel_datum
     aktiver_index = 0
 
     for d in alle_ststage:
         d_str = d.isoformat()
         ist_ausfall = d_str in daten.get("ausfaelle", [])
 
-        # Wenn an diesem Tag eine manuelle Anpassung vorliegt, synchronisieren wir den Rotationsindex neu
         if d_str in daten.get("manuelle_anpassungen", {}):
             man_mod = daten["manuelle_anpassungen"][d_str]["mod"]
             if man_mod in personen:
@@ -82,7 +80,6 @@ def berechne_rotation_fuer_datum(ziel_datum: date, daten: dict):
                     "manuell": ziel_str in daten.get("manuelle_anpassungen", {}),
                 }
 
-            # Falls für das Ziel-Datum selbst eine manuelle Einstellung existiert
             if ziel_str in daten.get("manuelle_anpassungen", {}):
                 anpassung = daten["manuelle_anpassungen"][ziel_str]
                 return {
@@ -107,7 +104,6 @@ def berechne_rotation_fuer_datum(ziel_datum: date, daten: dict):
                 "manuell": False,
             }
 
-        # Wenn das Meeting nicht ausfällt, geht die Rotation für den nächsten Donnerstag einen Schritt weiter
         if not ist_ausfall:
             aktiver_index += 1
 
@@ -190,7 +186,7 @@ st.markdown(
         text-align: center;
         color: #475569;
         font-weight: 500;
-        margin-bottom: 8px; /* Sorgt dafür, dass sich Zellen nicht berühren */
+        margin-bottom: 8px;
     }
     .weekday-cell {
         text-align: center;
@@ -375,43 +371,44 @@ if sel_tag:
 
             st.write("**Eingeteilte Personen anpassen:**")
 
-            # Hilfsfunktion zur Ermittlung passender Folgerollen bei der Auswahl
-            personen_liste = daten.get("personen", STANDARD_PERSONEN)
-            current_mod = rot_info["mod"] if rot_info["mod"] in personen_liste else personen_liste[0]
-            
-            mod_wahl = st.selectbox("🎤 Moderator*in", personen_liste, index=personen_liste.index(current_mod))
-            
-            # Automatische Vorschläge für Protokoll & Pause basierend auf der Wahl des Moderators
-            mod_idx = personen_liste.index(mod_wahl)
-            proto_default = personen_liste[(mod_idx + 1) % len(personen_liste)]
-            pause_default = personen_liste[(mod_idx + 2) % len(personen_liste)]
+            personen_liste = ["Lissi", "Veronika", "Moritz"]
 
-            proto_val = st.text_input("📝 Protokollant*in", value=proto_default)
-            pause_val = st.text_input("☕ Pause", value=pause_default)
+            # Hilfsfunktion zur sicheren Bestimmung des Start-Index
+            def get_idx(person_name, default_idx=0):
+                return personen_liste.index(person_name) if person_name in personen_liste else default_idx
+
+            mod_wahl = st.selectbox("🎤 Moderator*in", personen_liste, index=get_idx(rot_info["mod"], 0))
+            proto_wahl = st.selectbox("📝 Protokollant*in", personen_liste, index=get_idx(rot_info["proto"], 1))
+            pause_wahl = st.selectbox("☕ Pause", personen_liste, index=get_idx(rot_info["pause"], 2))
 
             speichern_btn = st.form_submit_button("Speichern")
 
             if speichern_btn:
-                if ist_ausfall_chk:
-                    if sel_str not in daten["ausfaelle"]:
-                        daten["ausfaelle"].append(sel_str)
+                # Prüfen, ob eine Person doppelt ausgewählt wurde
+                ausgewaehlt = [mod_wahl, proto_wahl, pause_wahl]
+                if len(set(ausgewaehlt)) < 3 and not ist_ausfall_chk:
+                    st.error("⚠️ Bitte wähle für jede Rolle eine unterschiedliche Person aus!")
                 else:
-                    if sel_str in daten["ausfaelle"]:
-                        daten["ausfaelle"].remove(sel_str)
+                    if ist_ausfall_chk:
+                        if sel_str not in daten["ausfaelle"]:
+                            daten["ausfaelle"].append(sel_str)
+                    else:
+                        if sel_str in daten["ausfaelle"]:
+                            daten["ausfaelle"].remove(sel_str)
 
-                if "manuelle_anpassungen" not in daten:
-                    daten["manuelle_anpassungen"] = {}
+                    if "manuelle_anpassungen" not in daten:
+                        daten["manuelle_anpassungen"] = {}
 
-                daten["manuelle_anpassungen"][sel_str] = {
-                    "mod": mod_wahl,
-                    "proto": proto_val,
-                    "pause": pause_val,
-                }
+                    daten["manuelle_anpassungen"][sel_str] = {
+                        "mod": mod_wahl,
+                        "proto": proto_wahl,
+                        "pause": pause_wahl,
+                    }
 
-                speichere_daten(daten)
-                st.session_state["edit_mode"] = False
-                st.success("Erfolgreich gespeichert! Alle nachfolgenden Tage passen sich nun an.")
-                st.rerun()
+                    speichere_daten(daten)
+                    st.session_state["edit_mode"] = False
+                    st.success("Erfolgreich gespeichert! Alle nachfolgenden Tage passen sich nun an.")
+                    st.rerun()
 
     # --- ANZEIGE-MODUS ---
     else:
