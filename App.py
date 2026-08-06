@@ -12,7 +12,7 @@ START_DATUM = date(2026, 8, 6)
 
 
 # ---------------------------------------------------------
-# Datenhaltung & Logik (Unverändert & stabil)
+# Datenhaltung & Logik
 # ---------------------------------------------------------
 def lade_daten():
     if DATEI.exists():
@@ -105,7 +105,7 @@ def berechne_rotation_fuer_datum(ziel_datum: date, daten: dict):
 
 
 # ---------------------------------------------------------
-# Page Setup & Clean CSS Layout
+# Page Setup & Styling
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="NXP ServiceMGMT Meeting Rotation",
@@ -122,17 +122,20 @@ st.markdown(
         color: #FFFFFF;
     }
 
+    /* Breiterer Container damit die Überschrift in eine Zeile passt */
     .main .block-container {
-        max-width: 580px !important;
+        max-width: 720px !important;
         padding-top: 2rem !important;
+        padding-bottom: 2rem !important;
     }
 
+    /* Überschrift einzeilig */
     .header-title {
         color: #FFFFFF;
         font-weight: 800;
-        font-size: 2.1rem;
-        margin-bottom: 25px;
-        line-height: 1.2;
+        font-size: 1.8rem;
+        margin-bottom: 12px;
+        white-space: nowrap;
     }
 
     .month-header {
@@ -156,92 +159,71 @@ st.markdown(
         background-color: #B52B2D !important;
     }
 
+    /* Clean Trennstriche */
     .cal-divider {
         border-bottom: 1px solid #3A3836;
-        margin: 15px 0 20px 0;
+        margin: 14px 0 16px 0;
     }
 
-    /* PRÄZISES 7-SPALTEN GRID FOR DEN KALENDER */
-    .calendar-grid {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 8px;
-        align-items: center;
-        justify-items: center;
-    }
-
-    /* Wochentage (Mo, Di, ...) spürbar größer */
+    /* Wochentage Kacheln & Bezeichnungen */
     .day-header {
         font-size: 1.15rem;
         font-weight: 700;
         color: #E0E0E0;
         text-align: center;
-        margin-bottom: 8px;
+        padding-bottom: 6px;
     }
 
-    /* Standard Kachel */
-    .day-cell {
-        width: 100%;
-        height: 44px;
+    .cal-cell-container {
+        height: 48px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.05rem;
+    }
+
+    .cal-cell-text {
         font-weight: 600;
+        font-size: 1.05rem;
         color: #FFFFFF;
-        border-radius: 8px;
+        width: 100%;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     /* Wochenend-Kacheln (Sa, So) */
-    .day-cell.weekend {
+    .cal-cell-text.weekend {
         background-color: #333230;
-        border: 1px solid #3D3B39;
+        border-radius: 8px;
     }
 
-    .day-cell.empty {
-        visibility: hidden;
-    }
-
-    /* Rote Donnerstags-Buttons (Form-Submit) */
-    .thursday-btn {
-        width: 100%;
-        height: 44px;
-        background-color: #D9383A;
-        color: #FFFFFF;
-        border: none;
-        border-radius: 10px;
-        font-size: 1.05rem;
-        font-weight: 700;
-        cursor: pointer;
-        transition: background-color 0.15s ease;
-        box-shadow: 0 4px 10px rgba(217, 56, 58, 0.25);
-    }
-    .thursday-btn:hover {
-        background-color: #B52B2D;
-    }
-    .thursday-btn.cancelled {
-        background-color: #55514E;
-        box-shadow: none;
-    }
-
-    /* Sauberer Bearbeiten-Button */
-    .edit-btn-container div.stButton > button {
-        background-color: transparent !important;
-        border: 1px solid #444240 !important;
-        color: #E0E0E0 !important;
-        height: 36px !important;
-        width: 36px !important;
+    /* Donnerstags-Buttons (Rot) */
+    .thursday-btn-wrapper div.stButton > button {
+        background-color: #D9383A !important;
+        color: white !important;
         border-radius: 8px !important;
+        border: none !important;
+        font-weight: 700 !important;
+        font-size: 1.05rem !important;
+        height: 42px !important;
+        width: 100% !important;
+        padding: 0 !important;
+        box-shadow: 0 4px 10px rgba(217, 56, 58, 0.3) !important;
+    }
+    .thursday-btn-wrapper.cancelled div.stButton > button {
+        background-color: #55514E !important;
+        box-shadow: none !important;
     }
 
-    /* Untere Rollenkarten */
+    /* Unterer Bereich: Rollen-Karten */
     .meeting-section-header {
         font-size: 1.25rem;
         font-weight: 700;
         color: #FFFFFF;
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 8px;
     }
 
     .role-container {
@@ -253,8 +235,8 @@ st.markdown(
 
     .role-card {
         background-color: #1C1B1A;
-        border-radius: 10px;
-        padding: 14px 16px;
+        border-radius: 8px;
+        padding: 14px;
         border: 1px solid #333230;
         border-left: 4px solid #4A90E2;
     }
@@ -271,7 +253,7 @@ st.markdown(
         font-size: 0.8rem;
         font-weight: 600;
         color: #9E9E9E;
-        margin-bottom: 6px;
+        margin-bottom: 4px;
         display: flex;
         align-items: center;
         gap: 6px;
@@ -280,6 +262,12 @@ st.markdown(
         font-size: 1.25rem;
         font-weight: 700;
         color: #FFFFFF;
+    }
+
+    @media (max-width: 680px) {
+        .header-title { white-space: normal; font-size: 1.5rem; }
+        .role-container { grid-template-columns: 1fr; }
+        .role-card.cancelled { grid-column: span 1; }
     }
 </style>
 """,
@@ -291,6 +279,9 @@ st.markdown(
     "<h1 class='header-title'>NXP ServiceMGMT Meeting Rotation</h1>",
     unsafe_allow_html=True,
 )
+
+# Trennstrich unter der Haupt-Überschrift
+st.markdown("<div class='cal-divider'></div>", unsafe_allow_html=True)
 
 # ---------------------------------------------------------
 # State Handling
@@ -359,76 +350,60 @@ with col_next:
         st.rerun()
 
 # ---------------------------------------------------------
-# KALENDER RENDERN (Grid System)
+# KALENDER RENDERN (Kein Rahmen)
 # ---------------------------------------------------------
 wochentage_kurz = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
+cols_header = st.columns(7)
+for i, col in enumerate(cols_header):
+    col.markdown(
+        f"<div class='day-header'>{wochentage_kurz[i]}</div>",
+        unsafe_allow_html=True,
+    )
 
-# 1. Wochentag-Köpfe
-header_html = "<div class='calendar-grid'>"
-for day_name in wochentage_kurz:
-    header_html += f"<div class='day-header'>{day_name}</div>"
-header_html += "</div><div class='cal-divider'></div>"
-st.markdown(header_html, unsafe_allow_html=True)
+st.markdown("<div class='cal-divider'></div>", unsafe_allow_html=True)
 
-# 2. Tage im Raster zusammenbauen
 cal = calendar.Calendar(firstweekday=0)
 monats_tage = cal.monthdatescalendar(
     st.session_state["current_year"], st.session_state["current_month"]
 )
 
-# Wir nutzen eine unsichtbare Form für exakte Klicks ohne Layout-Verschiebung
-with st.form("cal_click_form", clear_on_submit=False):
-    grid_html = "<div class='calendar-grid'>"
-    clicked_tag_str = None
-
-    for woche in monats_tage:
-        for i, tag in enumerate(woche):
+for woche in monats_tage:
+    cols = st.columns(7)
+    for i, tag in enumerate(woche):
+        with cols[i]:
             is_weekend = i >= 5
-            tag_str = tag.isoformat()
+            weekend_class = "weekend" if is_weekend else ""
 
             if tag.month != st.session_state["current_month"]:
-                grid_html += "<div class='day-cell empty'></div>"
-            elif tag.weekday() == 3 and tag >= START_DATUM:
-                rot = berechne_rotation_fuer_datum(tag, daten)
-                btn_cls = "cancelled" if rot["ausfall"] else ""
-                # Klickbarer roter Button via Form-Submit-Val
-                grid_html += f"<button type='submit' name='day_click' value='{tag_str}' class='thursday-btn {btn_cls}'>{tag.day}</button>"
-            else:
-                weekend_cls = "weekend" if is_weekend else ""
-                grid_html += (
-                    f"<div class='day-cell {weekend_cls}'>{tag.day}</div>"
+                st.markdown(
+                    "<div class='cal-cell-container'></div>",
+                    unsafe_allow_html=True,
                 )
+                continue
 
-    grid_html += "</div>"
-    st.markdown(grid_html, unsafe_allow_html=True)
+            tag_str = tag.isoformat()
+            ist_donnerstag = tag.weekday() == 3
 
-    # Unsichtbarer Form-Submit Auswerter
-    submitted = st.form_submit_button(
-        "select", help="hidden", disabled=False, use_container_width=True
-    )
-    # Verstecke den Standard-Submit-Button von Streamlit
-    st.markdown(
-        "<style>div[data-testid='stFormSubmitButton']{display:none;}</style>",
-        unsafe_allow_html=True,
-    )
+            # Donnerstage -> Roter Button
+            if ist_donnerstag and tag >= START_DATUM:
+                rot = berechne_rotation_fuer_datum(tag, daten)
+                btn_class = "cancelled" if rot["ausfall"] else ""
 
-# Klick-Auswertung
-query_params = st.context.request if hasattr(st, "context") else {}
-# Überprüfe geposteten Tag beim Klick
-for woche in monats_tage:
-    for tag in woche:
-        tag_str = tag.isoformat()
-        if st.session_state.get(f"day_click") == tag_str:
-            st.session_state["selected_date"] = tag
-
-# Fallback für Klickerkennung
-if (
-    "cal_click_form" in st.session_state
-    and st.session_state.cal_click_form.get("day_click")
-):
-    sel = st.session_state.cal_click_form["day_click"]
-    st.session_state["selected_date"] = date.fromisoformat(sel)
-
+                st.markdown(
+                    f"<div class='cal-cell-container'><div class='thursday-btn-wrapper {btn_class}' style='width:100%;'>",
+                    unsafe_allow_html=True,
+                )
+                if st.button(f"{tag.day}", key=f"btn_{tag_str}"):
+                    st.session_state["selected_date"] = tag
+                    st.session_state["edit_mode"] = False
+                    st.rerun()
+                st.markdown("</div></div>", unsafe_allow_html=True)
+            else:
+                # Normale Tage & Wochenende
+                st.markdown(
+                    f"<div class='cal-cell-container'><div class='cal-cell-text {weekend_class}'>{tag.day}</div></div>",
+                    unsafe_allow_html=True,
+                )
 
 # ---------------------------------------------------------
 # UNTERER BEREICH: ROLLENANZEIGE
@@ -453,10 +428,8 @@ if (
         )
 
     with col_edit_btn:
-        st.markdown("<div class='edit-btn-container'>", unsafe_allow_html=True)
         if st.button("✏️", key="edit_btn"):
             st.session_state["edit_mode"] = not st.session_state["edit_mode"]
-        st.markdown("</div>", unsafe_allow_html=True)
 
     # Bearbeitungs-Modus
     if st.session_state["edit_mode"]:
