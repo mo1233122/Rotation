@@ -142,7 +142,7 @@ st.markdown(
         color: #FFFFFF;
     }
 
-    /* Navigation oben rechts */
+    /* Rote Navigations-Pfeile oben rechts */
     div[data-testid="stHorizontalBlock"]:first-of-type div.stButton > button {
         border-radius: 8px !important;
         background-color: #D9383A !important;
@@ -160,9 +160,12 @@ st.markdown(
         margin: 14px 0 16px 0;
     }
 
-    /* HOMOGENES SPALTEN-LAYOUT FOR ALLE TAGE */
+    /* FIX FÜR STREAMLIT SPALTEN-ALIGNMENT */
     [data-testid="column"] {
         padding: 0 3px !important;
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
 
     .day-header {
@@ -171,40 +174,38 @@ st.markdown(
         color: #E0E0E0;
         text-align: center;
         margin-bottom: 6px;
+        width: 100%;
     }
 
-    /* STANDARD DAY BUTTON (Reguläre Tage) */
-    div.day-btn-std div.stButton > button {
+    /* Normale Tageskästchen */
+    .day-cell {
+        width: 100%;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: #FFFFFF;
+        border-radius: 8px;
+        box-sizing: border-box;
+    }
+
+    .day-cell.weekend {
+        background-color: #333230;
+    }
+
+    /* ISOLIERTER STYLING-CONTAINER FÜR DONNERSTAGE (NUR HIER ROT) */
+    .do-btn-container {
+        width: 100%;
+    }
+
+    .do-btn-container div.stButton {
         width: 100% !important;
-        height: 44px !important;
-        background-color: transparent !important;
-        color: #FFFFFF !important;
-        border: none !important;
-        border-radius: 8px !important;
-        font-size: 1.05rem !important;
-        font-weight: 600 !important;
-        padding: 0 !important;
-        cursor: default !important;
-        box-shadow: none !important;
+        margin: 0 !important;
     }
 
-    /* WOCHENENDE BUTTONS */
-    div.day-btn-weekend div.stButton > button {
-        width: 100% !important;
-        height: 44px !important;
-        background-color: #333230 !important;
-        color: #FFFFFF !important;
-        border: none !important;
-        border-radius: 8px !important;
-        font-size: 1.05rem !important;
-        font-weight: 600 !important;
-        padding: 0 !important;
-        cursor: default !important;
-        box-shadow: none !important;
-    }
-
-    /* DONNERSTAG BUTTONS (Aktiv & Klickbar) */
-    div.day-btn-thursday div.stButton > button {
+    .do-btn-container div.stButton > button {
         width: 100% !important;
         height: 44px !important;
         background-color: #D9383A !important;
@@ -214,46 +215,42 @@ st.markdown(
         font-size: 1.05rem !important;
         font-weight: 700 !important;
         padding: 0 !important;
-        cursor: pointer !important;
         box-shadow: 0 3px 8px rgba(217, 56, 58, 0.3) !important;
     }
 
-    div.day-btn-thursday div.stButton > button:hover {
+    .do-btn-container div.stButton > button:hover {
         background-color: #B52B2D !important;
     }
 
-    /* ABGESAGTER DONNERSTAG */
-    div.day-btn-cancelled div.stButton > button {
-        width: 100% !important;
-        height: 44px !important;
+    /* Button für abgesagte Meetings */
+    .do-btn-container.cancelled div.stButton > button {
         background-color: #55514E !important;
-        color: #FFFFFF !important;
-        border: none !important;
-        border-radius: 8px !important;
-        font-size: 1.05rem !important;
-        font-weight: 700 !important;
-        padding: 0 !important;
-        cursor: pointer !important;
         box-shadow: none !important;
     }
 
-    /* "Bearbeiten" TEXT-LINK WRAPPER */
-    .edit-link-wrapper div.stButton > button {
+    /* BEARBEITEN-LINK (Kein Button-Kasten, schlichter Text-Link) */
+    .edit-link-container {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .edit-link-container div.stButton > button {
         background-color: transparent !important;
         border: none !important;
         color: #4A90E2 !important;
         text-decoration: underline !important;
         font-size: 0.95rem !important;
         font-weight: 600 !important;
-        padding: 0 !important;
+        padding: 4px 8px !important;
         box-shadow: none !important;
         height: auto !important;
         width: auto !important;
         cursor: pointer !important;
     }
 
-    .edit-link-wrapper div.stButton > button:hover {
+    .edit-link-container div.stButton > button:hover {
         color: #6BA4E8 !important;
+        background-color: transparent !important;
     }
 
     /* Rollenkarten */
@@ -379,7 +376,7 @@ with col_next:
         st.rerun()
 
 # ---------------------------------------------------------
-# KALENDER RENDERN (Alle Felder als Buttons -> Perfektes Grid)
+# KALENDER RENDERN
 # ---------------------------------------------------------
 wochentage_kurz = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
 
@@ -403,39 +400,36 @@ for woche in monats_tage:
     for i, tag in enumerate(woche):
         with cols[i]:
             if tag.month != st.session_state["current_month"]:
-                # Leeres Feld
-                st.markdown("<div class='day-btn-std'>", unsafe_allow_html=True)
-                st.button(" ", key=f"empty_{tag.isoformat()}_{i}")
-                st.markdown("</div>", unsafe_allow_html=True)
-
-            elif tag.weekday() == 3 and tag >= START_DATUM:
-                # Donnerstage (Klickbar & interaktiv)
-                rot = berechne_rotation_fuer_datum(tag, daten)
-                btn_class = (
-                    "day-btn-cancelled" if rot["ausfall"] else "day-btn-thursday"
-                )
-
                 st.markdown(
-                    f"<div class='{btn_class}'>", unsafe_allow_html=True
+                    "<div class='day-cell'></div>", unsafe_allow_html=True
                 )
-                if st.button(f"{tag.day}", key=f"btn_{tag.isoformat()}"):
+            elif tag.weekday() == 3 and tag >= START_DATUM:
+                rot = berechne_rotation_fuer_datum(tag, daten)
+                is_cancelled = rot["ausfall"]
+
+                btn_class = (
+                    "do-btn-container cancelled"
+                    if is_cancelled
+                    else "do-btn-container"
+                )
+
+                # Nur Donnerstage bekommen einen Streamlit-Button, sauber isoliert über div-Klasse
+                st.markdown(f"<div class='{btn_class}'>", unsafe_allow_html=True)
+                if st.button(f"{tag.day}", key=f"do_btn_{tag.isoformat()}"):
                     st.session_state["selected_date"] = tag
                     st.session_state["edit_mode"] = False
                     st.rerun()
                 st.markdown("</div>", unsafe_allow_html=True)
 
             else:
-                # Normale Tage & Wochenende (Ebenfalls Buttons zur Grid-Stabilität)
-                btn_class = (
-                    "day-btn-weekend" if i >= 5 else "day-btn-std"
-                )
+                is_weekend = i >= 5
+                weekend_cls = "weekend" if is_weekend else ""
                 st.markdown(
-                    f"<div class='{btn_class}'>", unsafe_allow_html=True
+                    f"<div class='day-cell {weekend_cls}'>{tag.day}</div>",
+                    unsafe_allow_html=True,
                 )
-                st.button(f"{tag.day}", key=f"std_{tag.isoformat()}")
-                st.markdown("</div>", unsafe_allow_html=True)
 
-# Trennlinie direkt unter dem Kalender
+# Trennlinie unter dem Kalender
 st.markdown("<div class='cal-divider'></div>", unsafe_allow_html=True)
 
 # ---------------------------------------------------------
@@ -459,12 +453,9 @@ if (
         )
 
     with col_edit_btn:
-        st.markdown(
-            "<div class='edit-link-wrapper' style='text-align: right;'>",
-            unsafe_allow_html=True,
-        )
-        # NEU: Wort "Bearbeiten" als Link
-        if st.button("Bearbeiten", key="edit_btn"):
+        # Sauberer Text-Link ohne roten Button-Kasten
+        st.markdown("<div class='edit-link-container'>", unsafe_allow_html=True)
+        if st.button("Bearbeiten", key="edit_link_btn"):
             st.session_state["edit_mode"] = not st.session_state["edit_mode"]
             st.rerun()
         st.markdown("</div>", unsafe_allow_html=True)
