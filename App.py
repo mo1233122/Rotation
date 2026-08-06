@@ -105,7 +105,7 @@ def berechne_rotation_fuer_datum(ziel_datum: date, daten: dict):
 
 
 # ---------------------------------------------------------
-# Page Setup & Styling
+# Page Setup & CSS (Sauberes Grid System)
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="NXP ServiceMGMT Meeting Rotation",
@@ -122,14 +122,12 @@ st.markdown(
         color: #FFFFFF;
     }
 
-    /* Breiterer Container damit die Überschrift in eine Zeile passt */
+    /* Container für einzeilige Überschrift */
     .main .block-container {
-        max-width: 720px !important;
+        max-width: 700px !important;
         padding-top: 2rem !important;
-        padding-bottom: 2rem !important;
     }
 
-    /* Überschrift einzeilig */
     .header-title {
         color: #FFFFFF;
         font-weight: 800;
@@ -159,64 +157,73 @@ st.markdown(
         background-color: #B52B2D !important;
     }
 
-    /* Clean Trennstriche */
+    /* Trennstriche */
     .cal-divider {
         border-bottom: 1px solid #3A3836;
         margin: 14px 0 16px 0;
     }
 
-    /* Wochentage Kacheln & Bezeichnungen */
+    /* PERFECT 7-COLUMN CSS GRID */
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 8px;
+        align-items: center;
+        justify-items: center;
+    }
+
     .day-header {
         font-size: 1.15rem;
         font-weight: 700;
         color: #E0E0E0;
         text-align: center;
-        padding-bottom: 6px;
+        margin-bottom: 6px;
     }
 
-    .cal-cell-container {
-        height: 48px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .cal-cell-text {
-        font-weight: 600;
-        font-size: 1.05rem;
-        color: #FFFFFF;
+    .day-cell {
         width: 100%;
-        height: 42px;
+        height: 44px;
         display: flex;
         align-items: center;
         justify-content: center;
-    }
-
-    /* Wochenend-Kacheln (Sa, So) */
-    .cal-cell-text.weekend {
-        background-color: #333230;
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: #FFFFFF;
         border-radius: 8px;
     }
 
-    /* Donnerstags-Buttons (Rot) */
-    .thursday-btn-wrapper div.stButton > button {
-        background-color: #D9383A !important;
-        color: white !important;
-        border-radius: 8px !important;
-        border: none !important;
-        font-weight: 700 !important;
-        font-size: 1.05rem !important;
-        height: 42px !important;
-        width: 100% !important;
-        padding: 0 !important;
-        box-shadow: 0 4px 10px rgba(217, 56, 58, 0.3) !important;
-    }
-    .thursday-btn-wrapper.cancelled div.stButton > button {
-        background-color: #55514E !important;
-        box-shadow: none !important;
+    .day-cell.weekend {
+        background-color: #333230;
     }
 
-    /* Unterer Bereich: Rollen-Karten */
+    .day-cell.empty {
+        visibility: hidden;
+    }
+
+    /* Klickbare rote Donnerstage im Grid */
+    .thursday-btn {
+        width: 100%;
+        height: 44px;
+        background-color: #D9383A;
+        color: #FFFFFF;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.05rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 0.1s, background-color 0.15s;
+        box-shadow: 0 3px 8px rgba(217, 56, 58, 0.3);
+    }
+    .thursday-btn:hover {
+        background-color: #B52B2D;
+        transform: scale(1.02);
+    }
+    .thursday-btn.cancelled {
+        background-color: #55514E;
+        box-shadow: none;
+    }
+
+    /* Rollenkarten unten */
     .meeting-section-header {
         font-size: 1.25rem;
         font-weight: 700;
@@ -224,6 +231,13 @@ st.markdown(
         display: flex;
         align-items: center;
         gap: 8px;
+    }
+
+    .edit-icon-btn div.stButton > button {
+        background-color: #D9383A !important;
+        border-radius: 8px !important;
+        height: 36px !important;
+        width: 36px !important;
     }
 
     .role-container {
@@ -254,20 +268,11 @@ st.markdown(
         font-weight: 600;
         color: #9E9E9E;
         margin-bottom: 4px;
-        display: flex;
-        align-items: center;
-        gap: 6px;
     }
     .role-person {
         font-size: 1.25rem;
         font-weight: 700;
         color: #FFFFFF;
-    }
-
-    @media (max-width: 680px) {
-        .header-title { white-space: normal; font-size: 1.5rem; }
-        .role-container { grid-template-columns: 1fr; }
-        .role-card.cancelled { grid-column: span 1; }
     }
 </style>
 """,
@@ -279,8 +284,6 @@ st.markdown(
     "<h1 class='header-title'>NXP ServiceMGMT Meeting Rotation</h1>",
     unsafe_allow_html=True,
 )
-
-# Trennstrich unter der Haupt-Überschrift
 st.markdown("<div class='cal-divider'></div>", unsafe_allow_html=True)
 
 # ---------------------------------------------------------
@@ -317,7 +320,7 @@ monate_namen = [
 ]
 
 # ---------------------------------------------------------
-# Monats-Header & Navigation (Rote Pfeile)
+# Navigation (Monat / Jahr)
 # ---------------------------------------------------------
 col_title, col_prev, col_next = st.columns([6, 1, 1])
 
@@ -350,63 +353,57 @@ with col_next:
         st.rerun()
 
 # ---------------------------------------------------------
-# KALENDER RENDERN (Kein Rahmen)
+# KALENDER RENDERN (Perfect CSS Grid, kein Rahmen)
 # ---------------------------------------------------------
 wochentage_kurz = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
-cols_header = st.columns(7)
-for i, col in enumerate(cols_header):
-    col.markdown(
-        f"<div class='day-header'>{wochentage_kurz[i]}</div>",
-        unsafe_allow_html=True,
-    )
 
-st.markdown("<div class='cal-divider'></div>", unsafe_allow_html=True)
+# Wochentage-Zeile
+grid_html = "<div class='calendar-grid'>"
+for day_name in wochentage_kurz:
+    grid_html += f"<div class='day-header'>{day_name}</div>"
+grid_html += "</div><div class='cal-divider'></div>"
+st.markdown(grid_html, unsafe_allow_html=True)
 
+# Tage-Grid mit HTML-Buttons für Donnerstage
 cal = calendar.Calendar(firstweekday=0)
 monats_tage = cal.monthdatescalendar(
     st.session_state["current_year"], st.session_state["current_month"]
 )
 
+# Klickerfassung über URL Query Param (Fehlerfrei!)
+query_params = st.query_params
+if "clicked_day" in query_params:
+    try:
+        clicked_date = date.fromisoformat(query_params["clicked_day"])
+        st.session_state["selected_date"] = clicked_date
+        st.session_state["edit_mode"] = False
+        st.query_params.clear()
+    except Exception:
+        pass
+
+days_html = "<div class='calendar-grid'>"
+
 for woche in monats_tage:
-    cols = st.columns(7)
     for i, tag in enumerate(woche):
-        with cols[i]:
-            is_weekend = i >= 5
-            weekend_class = "weekend" if is_weekend else ""
+        is_weekend = i >= 5
+        tag_str = tag.isoformat()
 
-            if tag.month != st.session_state["current_month"]:
-                st.markdown(
-                    "<div class='cal-cell-container'></div>",
-                    unsafe_allow_html=True,
-                )
-                continue
+        if tag.month != st.session_state["current_month"]:
+            days_html += "<div class='day-cell empty'></div>"
+        elif tag.weekday() == 3 and tag >= START_DATUM:
+            rot = berechne_rotation_fuer_datum(tag, daten)
+            btn_cls = "cancelled" if rot["ausfall"] else ""
+            # Nativer HTML Link-Button, der das Datum absolut fehlerfrei setzt
+            days_html += f"<button onclick=\"window.location.href='?clicked_day={tag_str}'\" class='thursday-btn {btn_cls}'>{tag.day}</button>"
+        else:
+            weekend_cls = "weekend" if is_weekend else ""
+            days_html += f"<div class='day-cell {weekend_cls}'>{tag.day}</div>"
 
-            tag_str = tag.isoformat()
-            ist_donnerstag = tag.weekday() == 3
-
-            # Donnerstage -> Roter Button
-            if ist_donnerstag and tag >= START_DATUM:
-                rot = berechne_rotation_fuer_datum(tag, daten)
-                btn_class = "cancelled" if rot["ausfall"] else ""
-
-                st.markdown(
-                    f"<div class='cal-cell-container'><div class='thursday-btn-wrapper {btn_class}' style='width:100%;'>",
-                    unsafe_allow_html=True,
-                )
-                if st.button(f"{tag.day}", key=f"btn_{tag_str}"):
-                    st.session_state["selected_date"] = tag
-                    st.session_state["edit_mode"] = False
-                    st.rerun()
-                st.markdown("</div></div>", unsafe_allow_html=True)
-            else:
-                # Normale Tage & Wochenende
-                st.markdown(
-                    f"<div class='cal-cell-container'><div class='cal-cell-text {weekend_class}'>{tag.day}</div></div>",
-                    unsafe_allow_html=True,
-                )
+days_html += "</div>"
+st.markdown(days_html, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# UNTERER BEREICH: ROLLENANZEIGE
+# UNTERER BEREICH: ROLLENANZEIGE & EDITING
 # ---------------------------------------------------------
 sel_tag = st.session_state.get("selected_date")
 
@@ -420,7 +417,7 @@ if (
 
     st.markdown("<div class='cal-divider'></div>", unsafe_allow_html=True)
 
-    col_head, col_edit_btn = st.columns([5, 1])
+    col_head, col_edit_btn = st.columns([6, 1])
     with col_head:
         st.markdown(
             f"<div class='meeting-section-header'>👥 Meeting am {sel_tag.strftime('%d.%m.%Y')}</div>",
@@ -428,10 +425,12 @@ if (
         )
 
     with col_edit_btn:
+        st.markdown("<div class='edit-icon-btn'>", unsafe_allow_html=True)
         if st.button("✏️", key="edit_btn"):
             st.session_state["edit_mode"] = not st.session_state["edit_mode"]
+        st.markdown("</div>", unsafe_allow_html=True)
 
-    # Bearbeitungs-Modus
+    # Bearbeitungs-Formular
     if st.session_state["edit_mode"]:
         st.info("🛠️ **Anpassung für diesen Tag**")
         with st.form("edit_form"):
@@ -492,7 +491,7 @@ if (
                     st.session_state["edit_mode"] = False
                     st.rerun()
 
-    # Normaler Anzeige-Modus
+    # Normalansicht
     else:
         if rot_info["ausfall"]:
             st.markdown(
