@@ -108,150 +108,169 @@ def berechne_rotation_fuer_datum(ziel_datum: date, daten: dict):
 
 
 # ---------------------------------------------------------
-# Page Setup & Clean CSS
+# Page Setup & Exact Dark CSS (Matching Screenshot)
 # ---------------------------------------------------------
 st.set_page_config(
-    page_title="Patho ServiceMGMT Rotation", page_icon="📅", layout="centered"
+    page_title="NXP ServiceMGMT Meeting Rotation",
+    page_icon="📅",
+    layout="centered",
 )
 
 st.markdown(
     """
 <style>
-    /* Hintergrund & Grundstruktur */
+    /* Dunkler Theme Hintergrund */
     .stApp {
-        background-color: #E6E1DA;
-        color: #2D2B2A;
+        background-color: #262524;
+        color: #FFFFFF;
     }
 
+    /* Streamlit Padding minimieren */
+    .block-container {
+        padding-top: 2rem !important;
+        padding-bottom: 2rem !important;
+        max-width: 650px !important;
+    }
+
+    /* Überschrift */
     .header-title {
-        text-align: center;
-        color: #2D2B2A;
-        font-weight: 800;
-        font-size: clamp(1.4rem, 4vw, 2.0rem);
-        margin-top: -10px;
-        margin-bottom: 25px;
-    }
-
-    /* Weicher, heller Kalender-Behälter */
-    .cal-card-wrapper {
-        background-color: #FFFFFF;
-        border-radius: 20px;
-        padding: 24px;
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
-        border: 1px solid #D8D2C9;
-        max-width: 480px;
-        margin: 0 auto;
+        color: #FFFFFF;
+        font-weight: 700;
+        font-size: 1.8rem;
+        margin-bottom: 20px;
+        letter-spacing: -0.5px;
     }
 
     .month-header {
-        font-size: 1.35rem;
+        font-size: 1.25rem;
         font-weight: 700;
-        color: #1F1E1D;
+        color: #FFFFFF;
     }
 
-    /* Pfeil-Buttons oben rechts */
+    /* Pfeilbuttons oben rechts */
     div[data-testid="stHorizontalBlock"] div.stButton > button {
-        border-radius: 8px !important;
-        background-color: #FF2A55 !important;
-        color: white !important;
-        border: none !important;
+        border-radius: 6px !important;
+        background-color: #333230 !important;
+        color: #E0E0E0 !important;
+        border: 1px solid #444240 !important;
         font-weight: bold !important;
-        height: 36px !important;
-        width: 36px !important;
+        height: 32px !important;
+        width: 32px !important;
         padding: 0 !important;
     }
-
-    /* Trennlinie unter dem Monat */
-    .cal-divider {
-        border-bottom: 1px solid #E5E0D8;
-        margin: 15px 0 10px 0;
+    div[data-testid="stHorizontalBlock"] div.stButton > button:hover {
+        background-color: #444240 !important;
+        color: #FFFFFF !important;
     }
 
-    /* Einheits-Button für Donnerstage in Streamlit */
+    /* Trennstriche */
+    .cal-divider {
+        border-bottom: 1px solid #3A3836;
+        margin: 12px 0 16px 0;
+    }
+
+    /* Donnerstags-Buttons (Rot wie im Bild) */
     .thursday-btn-wrapper div.stButton > button {
-        background-color: #FF2A55 !important;
+        background-color: #D9383A !important;
         color: white !important;
         border-radius: 8px !important;
         border: none !important;
         font-weight: 700 !important;
-        height: 32px !important;
-        width: 32px !important;
+        height: 40px !important;
+        width: 100% !important;
+        max-width: 48px !important;
         margin: 0 auto !important;
         padding: 0 !important;
-        box-shadow: 0 3px 8px rgba(255, 42, 85, 0.3) !important;
     }
     .thursday-btn-wrapper.cancelled div.stButton > button {
-        background-color: #8C857B !important;
-        box-shadow: none !important;
+        background-color: #55514E !important;
     }
 
-    /* Zellen styling */
-    .cal-cell-text {
-        height: 32px;
+    /* Wochentage & Normale Tage */
+    .cal-header-text {
+        font-weight: 700;
+        font-size: 0.95rem;
+        text-align: center;
+        color: #E0E0E0;
+        padding-bottom: 8px;
+    }
+
+    .cal-cell-container {
+        height: 44px;
         display: flex;
         align-items: center;
         justify-content: center;
+    }
+
+    .cal-cell-text {
         font-weight: 600;
         font-size: 0.95rem;
-        color: #383533;
+        color: #FFFFFF;
+        width: 100%;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
+
+    /* Samstag & Sonntag dunkelgrau hinterlegt */
     .cal-cell-text.weekend {
-        background-color: #F2EFE9;
-        border-radius: 4px;
+        background-color: #333230;
+        border-radius: 8px;
+        border: 1px solid #3A3836;
     }
+
     .cal-cell-text.empty {
-        opacity: 0.15;
+        opacity: 0;
     }
 
-    .cal-header-text {
+    /* Unterer Bereich: Rollen-Karten (Matching Screenshot) */
+    .meeting-title {
+        color: #FFFFFF;
+        font-size: 1.1rem;
         font-weight: 700;
-        font-size: 0.85rem;
-        text-align: center;
-        color: #5C5650;
-        padding: 4px 0;
-    }
-    .cal-header-text.weekend {
-        background-color: #F2EFE9;
-        border-radius: 4px 4px 0 0;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
 
-    /* Rollenkarten */
     .role-container {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 12px;
-        margin-top: 20px;
     }
 
     .role-card {
-        background-color: #FFFFFF;
-        border-radius: 14px;
-        padding: 16px 10px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
-        text-align: center;
-        border: 1px solid #D8D2C9;
-        border-top: 4px solid #FF2A55;
+        background-color: #1E1D1C;
+        border-radius: 8px;
+        padding: 12px 14px;
+        border: 1px solid #333230;
+        border-left: 3px solid #666;
+        text-align: left;
     }
-    .role-card.proto { border-top-color: #10B981; }
-    .role-card.pause { border-top-color: #F59E0B; }
+    .role-card.mod { border-left-color: #4A90E2; }
+    .role-card.proto { border-left-color: #2ECC71; }
+    .role-card.pause { border-left-color: #F39C12; }
     .role-card.cancelled { 
-        border-top-color: #EF4444; 
-        background-color: #FDF2F2; 
-        border: 1px solid #FCA5A5;
+        border-left-color: #E74C3C; 
+        background-color: #2A1C1C; 
         grid-column: span 3;
     }
 
     .role-title {
         font-size: 0.75rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        color: #78726A;
-        margin-bottom: 4px;
+        font-weight: 600;
+        color: #A0A0A0;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
     }
     .role-person {
-        font-size: 1.25rem;
+        font-size: 1.15rem;
         font-weight: 700;
-        color: #1F1E1D;
+        color: #FFFFFF;
     }
 
     @media (max-width: 640px) {
@@ -263,8 +282,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+# Titel
 st.markdown(
-    "<h1 class='header-title'>Patho ServiceMGMT Rotation</h1>",
+    "<h1 class='header-title'>NXP ServiceMGMT Meeting Rotation</h1>",
     unsafe_allow_html=True,
 )
 
@@ -302,12 +322,9 @@ monate_namen = [
 ]
 
 # ---------------------------------------------------------
-# Kalender Container
+# Monatszeile & Steuerung
 # ---------------------------------------------------------
-st.markdown("<div class='cal-card-wrapper'>", unsafe_allow_html=True)
-
-# Monatszeile + Pfeile
-col_title, col_prev, col_next = st.columns([5, 1, 1])
+col_title, col_prev, col_next = st.columns([6, 1, 1])
 
 with col_title:
     st.markdown(
@@ -337,20 +354,19 @@ with col_next:
         st.session_state["edit_mode"] = False
         st.rerun()
 
-# Trennstrich nach Monat / Pfeilen
-st.markdown("<div class='cal-divider'></div>", unsafe_allow_html=True)
-
-# Kalender Kopfzeile (Wochentage)
-wochentage_kurz = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]
+# ---------------------------------------------------------
+# Kalender Grid
+# ---------------------------------------------------------
+wochentage_kurz = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
 cols_header = st.columns(7)
 for i, col in enumerate(cols_header):
-    is_weekend = i >= 5
-    css = "cal-header-text weekend" if is_weekend else "cal-header-text"
     col.markdown(
-        f"<div class='{css}'>{wochentage_kurz[i]}</div>", unsafe_allow_html=True
+        f"<div class='cal-header-text'>{wochentage_kurz[i]}</div>",
+        unsafe_allow_html=True,
     )
 
-# Tage Rendern
+st.markdown("<div class='cal-divider'></div>", unsafe_allow_html=True)
+
 cal = calendar.Calendar(firstweekday=0)
 monats_tage = cal.monthdatescalendar(
     st.session_state["current_year"], st.session_state["current_month"]
@@ -363,10 +379,9 @@ for woche in monats_tage:
             is_weekend = i >= 5
             weekend_class = "weekend" if is_weekend else ""
 
-            # Tage anderer Monate
             if tag.month != st.session_state["current_month"]:
                 st.markdown(
-                    f"<div class='cal-cell-text empty {weekend_class}'>•</div>",
+                    "<div class='cal-cell-container'><div class='cal-cell-text empty'></div></div>",
                     unsafe_allow_html=True,
                 )
                 continue
@@ -374,31 +389,29 @@ for woche in monats_tage:
             tag_str = tag.isoformat()
             ist_donnerstag = tag.weekday() == 3
 
-            # Donnerstage mit interaktivem Button
+            # Donnerstage erhalten die roten Buttons
             if ist_donnerstag and tag >= START_DATUM:
                 rot = berechne_rotation_fuer_datum(tag, daten)
                 btn_class = "cancelled" if rot["ausfall"] else ""
 
                 st.markdown(
-                    f"<div class='thursday-btn-wrapper {btn_class}'>",
+                    f"<div class='cal-cell-container'><div class='thursday-btn-wrapper {btn_class}' style='width:100%; text-align:center;'>",
                     unsafe_allow_html=True,
                 )
                 if st.button(f"{tag.day}", key=f"btn_{tag_str}"):
                     st.session_state["selected_date"] = tag
                     st.session_state["edit_mode"] = False
                     st.rerun()
-                st.markdown("</div>", unsafe_allow_html=True)
+                st.markdown("</div></div>", unsafe_allow_html=True)
             else:
-                # Normale Tage & Wochenenden
+                # Samstag & Sonntag sind dunkelgrau hinterlegt
                 st.markdown(
-                    f"<div class='cal-cell-text {weekend_class}'>{tag.day}</div>",
+                    f"<div class='cal-cell-container'><div class='cal-cell-text {weekend_class}'>{tag.day}</div></div>",
                     unsafe_allow_html=True,
                 )
 
-st.markdown("</div>", unsafe_allow_html=True)
-
 # ---------------------------------------------------------
-# Rollenanzeige (NUR WENN EIN DATUM IM AKTUELLEN MONAT GEWÄHLT IST)
+# Rollenanzeige (Unterer Bereich)
 # ---------------------------------------------------------
 sel_tag = st.session_state.get("selected_date")
 
@@ -410,11 +423,13 @@ if (
     sel_str = sel_tag.isoformat()
     rot_info = berechne_rotation_fuer_datum(sel_tag, daten)
 
-    st.markdown("<br>", unsafe_allow_html=True)
-    head_col1, head_col2 = st.columns([3, 1])
+    st.markdown("<div class='cal-divider'></div>", unsafe_allow_html=True)
+
+    head_col1, head_col2 = st.columns([4, 1])
     with head_col1:
         st.markdown(
-            f"### Meeting am **{sel_tag.strftime('%d.%m.%Y')}**"
+            f"<div class='meeting-title'>👥 Meeting am {sel_tag.strftime('%d.%m.%Y')}</div>",
+            unsafe_allow_html=True,
         )
     with head_col2:
         if st.button("✏️ Bearbeiten", key="edit_btn"):
@@ -425,7 +440,7 @@ if (
         st.info("🛠️ **Anpassung für diesen Tag**")
         with st.form("edit_form"):
             ist_ausfall_chk = st.checkbox(
-                "❌ Meeting fällt aus (Rotation verschiebt sich automatisch)",
+                "❌ Meeting fällt aus (Rotation verschiebt sich)",
                 value=rot_info["ausfall"],
             )
 
@@ -440,12 +455,12 @@ if (
                 )
 
             mod_wahl = st.selectbox(
-                "🎤 Moderator*in",
+                "👑 Moderator*in",
                 personen_liste,
                 index=get_idx(rot_info["mod"], 0),
             )
             proto_wahl = st.selectbox(
-                "📝 Protokollant*in",
+                "✏️ Protokollant*in",
                 personen_liste,
                 index=get_idx(rot_info["proto"], 1),
             )
@@ -460,9 +475,7 @@ if (
             if speichern_btn:
                 ausgewaehlt = [mod_wahl, proto_wahl, pause_wahl]
                 if len(set(ausgewaehlt)) < 3 and not ist_ausfall_chk:
-                    st.error(
-                        "⚠️ Bitte wähle für jede Rolle eine unterschiedliche Person aus!"
-                    )
+                    st.error("⚠️ Bitte wähle drei unterschiedliche Personen!")
                 else:
                     if ist_ausfall_chk:
                         if sel_str not in daten["ausfaelle"]:
@@ -491,11 +504,8 @@ if (
                 """
                 <div class='role-container'>
                     <div class='role-card cancelled'>
-                        <div class='role-title' style='color: #EF4444;'>Meeting Status</div>
-                        <div class='role-person' style='color: #DC2626;'>❌ Abgesagt / Ausfall</div>
-                        <p style='color: #78726A; margin-top: 8px; font-size: 0.85rem;'>
-                            Die Rotation wird für die darauffolgende Woche fortgesetzt.
-                        </p>
+                        <div class='role-title'>⚠️ STATUS</div>
+                        <div class='role-person' style='color: #E74C3C;'>Abgesagt / Ausfall</div>
                     </div>
                 </div>
                 """,
@@ -506,11 +516,11 @@ if (
                 f"""
                 <div class='role-container'>
                     <div class='role-card mod'>
-                        <div class='role-title'>🎤 Moderator*in</div>
+                        <div class='role-title'>👑 Moderator*in</div>
                         <div class='role-person'>{rot_info['mod']}</div>
                     </div>
                     <div class='role-card proto'>
-                        <div class='role-title'>📝 Protokollant*in</div>
+                        <div class='role-title'>✏️ Protokollant*in</div>
                         <div class='role-person'>{rot_info['proto']}</div>
                     </div>
                     <div class='role-card pause'>
