@@ -3,7 +3,6 @@ from datetime import datetime, date, timedelta
 import json
 from pathlib import Path
 import streamlit as st
-import streamlit.components.v1 as components
 
 # Speicherdatei-Pfad
 DATEI = Path(__file__).with_name("patho_rotation.json")
@@ -144,7 +143,7 @@ st.markdown(
     }
 
     /* Rote Navigations-Pfeile oben rechts */
-    div[data-testid="stHorizontalBlock"] div.stButton > button {
+    div[data-testid="stHorizontalBlock"]:first-of-type div.stButton > button {
         border-radius: 8px !important;
         background-color: #D9383A !important;
         color: #FFFFFF !important;
@@ -161,13 +160,12 @@ st.markdown(
         margin: 14px 0 16px 0;
     }
 
-    /* STRENG GETRENNTES CSS GRID (Absolut unverschiebbar) */
-    .calendar-grid {
-        display: grid !important;
-        grid-template-columns: repeat(7, 1fr) !important;
-        gap: 8px !important;
-        width: 100% !important;
-        box-sizing: border-box !important;
+    /* FIX FÜR STREAMLIT SPALTEN-ALIGNMENT */
+    [data-testid="column"] {
+        padding: 0 3px !important;
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
 
     .day-header {
@@ -176,6 +174,7 @@ st.markdown(
         color: #E0E0E0;
         text-align: center;
         margin-bottom: 6px;
+        width: 100%;
     }
 
     .day-cell {
@@ -195,38 +194,37 @@ st.markdown(
         background-color: #333230;
     }
 
-    .day-cell.empty {
-        visibility: hidden;
+    /* Donnerstags-Buttons styling exakt passend zu den .day-cell Kästchen */
+    div[data-testid="column"] div.stButton {
+        width: 100% !important;
+        margin: 0 !important;
     }
 
-    /* Donnerstags-Button Style */
-    .thursday-btn {
-        width: 100%;
-        height: 44px;
-        background-color: #D9383A;
-        color: #FFFFFF;
-        border: none;
-        border-radius: 8px;
-        font-size: 1.05rem;
-        font-weight: 700;
-        cursor: pointer;
-        transition: transform 0.1s, background-color 0.15s;
-        box-shadow: 0 3px 8px rgba(217, 56, 58, 0.3);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .thursday-btn:hover {
-        background-color: #B52B2D;
-        transform: scale(1.02);
-    }
-    .thursday-btn.cancelled {
-        background-color: #55514E;
-        box-shadow: none;
+    div[data-testid="column"] div.stButton > button {
+        width: 100% !important;
+        height: 44px !important;
+        background-color: #D9383A !important;
+        color: #FFFFFF !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-size: 1.05rem !important;
+        font-weight: 700 !important;
+        padding: 0 !important;
+        box-shadow: 0 3px 8px rgba(217, 56, 58, 0.3) !important;
     }
 
-    /* Transparentes Zahnrad-Icon OHNE roten Hintergrund */
-    .gear-btn div.stButton > button {
+    div[data-testid="column"] div.stButton > button:hover {
+        background-color: #B52B2D !important;
+    }
+
+    /* Button für abgesagte Meetings */
+    div.btn-cancelled div.stButton > button {
+        background-color: #55514E !important;
+        box-shadow: none !important;
+    }
+
+    /* Neutrales Zahnrad-Icon OHNE roten Hintergrund */
+    .gear-icon-btn div.stButton > button {
         background-color: transparent !important;
         border: none !important;
         box-shadow: none !important;
@@ -234,15 +232,15 @@ st.markdown(
         height: 36px !important;
         width: 36px !important;
         padding: 0 !important;
-        cursor: pointer !important;
         opacity: 0.8;
     }
-    .gear-btn div.stButton > button:hover {
+
+    .gear-icon-btn div.stButton > button:hover {
         opacity: 1.0;
         background-color: rgba(255, 255, 255, 0.08) !important;
     }
 
-    /* Rollenkarten unten */
+    /* Rollenkarten */
     .meeting-section-header {
         font-size: 1.25rem;
         font-weight: 700;
@@ -312,7 +310,8 @@ if "current_month" not in st.session_state:
         8 if heute.year == 2026 else heute.month
     )
 if "selected_date" not in st.session_state:
-    st.session_state["selected_date"] = None
+    # Standardmäßig der erste Donnerstag des Monats (oder der 06.08.2026)
+    st.session_state["selected_date"] = date(2026, 8, 6)
 if "edit_mode" not in st.session_state:
     st.session_state["edit_mode"] = False
 
@@ -365,102 +364,59 @@ with col_next:
         st.rerun()
 
 # ---------------------------------------------------------
-# KALENDER RENDERN (Single Pure-Grid HTML, zero distortion)
+# KALENDER RENDERN
 # ---------------------------------------------------------
 wochentage_kurz = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
 
-# Spalten-Header
-grid_html = "<div class='calendar-grid'>"
-for day_name in wochentage_kurz:
-    grid_html += f"<div class='day-header'>{day_name}</div>"
-grid_html += "</div><div class='cal-divider'></div>"
+# Wochentage Header
+cols_header = st.columns(7)
+for i, name in enumerate(wochentage_kurz):
+    cols_header[i].markdown(
+        f"<div class='day-header'>{name}</div>", unsafe_allow_html=True
+    )
 
-# Kalendertage
+st.markdown("<div class='cal-divider'></div>", unsafe_allow_html=True)
+
+# Tage rendern
 cal = calendar.Calendar(firstweekday=0)
 monats_tage = cal.monthdatescalendar(
     st.session_state["current_year"], st.session_state["current_month"]
 )
 
-# Vorbereitung der klickbaren Donnerstage
-donnerstag_liste = []
-
-grid_html += "<div class='calendar-grid'>"
 for woche in monats_tage:
+    cols = st.columns(7)
     for i, tag in enumerate(woche):
-        is_weekend = i >= 5
-        tag_str = tag.isoformat()
+        with cols[i]:
+            if tag.month != st.session_state["current_month"]:
+                st.markdown(
+                    "<div class='day-cell'></div>", unsafe_allow_html=True
+                )
+            elif tag.weekday() == 3 and tag >= START_DATUM:
+                rot = berechne_rotation_fuer_datum(tag, daten)
+                is_cancelled = rot["ausfall"]
 
-        if tag.month != st.session_state["current_month"]:
-            grid_html += "<div class='day-cell empty'></div>"
-        elif tag.weekday() == 3 and tag >= START_DATUM:
-            rot = berechne_rotation_fuer_datum(tag, daten)
-            btn_cls = "cancelled" if rot["ausfall"] else ""
-            donnerstag_liste.append(tag)
-            # HTML Radio/Trigger Simulation ohne Streamlit-Re-Alignment Fehler
-            grid_html += f"<button type='submit' name='do_click' value='{tag_str}' class='thursday-btn {btn_cls}'>{tag.day}</button>"
-        else:
-            weekend_cls = "weekend" if is_weekend else ""
-            grid_html += (
-                f"<div class='day-cell {weekend_cls}'>{tag.day}</div>"
-            )
+                if is_cancelled:
+                    st.markdown(
+                        "<div class='btn-cancelled'>", unsafe_allow_html=True
+                    )
 
-grid_html += "</div>"
+                if st.button(f"{tag.day}", key=f"do_btn_{tag.isoformat()}"):
+                    st.session_state["selected_date"] = tag
+                    st.session_state["edit_mode"] = False
+                    st.rerun()
 
-# Streamlit Form-FormWrapper schützt das HTML-Grid vor Verschiebungen
-with st.form(key="calendar_grid_form", clear_on_submit=False):
-    st.markdown(grid_html, unsafe_allow_html=True)
-    submitted = st.form_submit_button(
-        label="none", use_container_width=True
-    )
+                if is_cancelled:
+                    st.markdown("</div>", unsafe_allow_html=True)
 
-# Unsichtbarer Submit Button über CSS
-st.markdown(
-    """
-    <style>
-        div[data-testid="stForm"] { border: none !important; padding: 0 !important; }
-        div[data-testid="stFormSubmitButton"] { display: none !important; }
-    </style>
-""",
-    unsafe_allow_html=True,
-)
+            else:
+                is_weekend = i >= 5
+                weekend_cls = "weekend" if is_weekend else ""
+                st.markdown(
+                    f"<div class='day-cell {weekend_cls}'>{tag.day}</div>",
+                    unsafe_allow_html=True,
+                )
 
-# Klick-Verarbeitung: Wenn ein Donnerstag geklickt wird
-if submitted:
-    # Auslesen des geposteten Werts aus dem HTML-Button
-    try:
-        # Fallback auf ersten aktiven Donnerstag im Monat falls direkt geklickt
-        if st.session_state["selected_date"] is None and donnerstag_liste:
-            st.session_state["selected_date"] = donnerstag_liste[0]
-    except Exception:
-        pass
-
-# Absicherung: native unsichtbare Buttons für 100% verlässlichen Direct-Click
-hidden_cols = st.columns(len(donnerstag_liste) if donnerstag_liste else 1)
-if donnerstag_liste:
-    for idx, d_tag in enumerate(donnerstag_liste):
-        # Unsichtbare Steuerungselemente
-        with hidden_cols[idx]:
-            if st.button(
-                f"Sel_{d_tag.day}", key=f"select_{d_tag.isoformat()}"
-            ):
-                st.session_state["selected_date"] = d_tag
-                st.session_state["edit_mode"] = False
-                st.rerun()
-
-st.markdown(
-    """
-    <style>
-        /* Versteckt die unsichtbaren Steuerungsbuttons komplett */
-        div[data-testid="stHorizontalBlock"]:last-of-type {
-            display: none !important;
-        }
-    </style>
-""",
-    unsafe_allow_html=True,
-)
-
-
-# Trennlinie direkt unter dem Kalender
+# Trennlinie unter dem Kalender
 st.markdown("<div class='cal-divider'></div>", unsafe_allow_html=True)
 
 # ---------------------------------------------------------
@@ -484,8 +440,8 @@ if (
         )
 
     with col_edit_btn:
-        st.markdown("<div class='gear-btn'>", unsafe_allow_html=True)
-        # Zahnrad OHNE roten Hintergrund
+        st.markdown("<div class='gear-icon-btn'>", unsafe_allow_html=True)
+        # Transparentes Zahnrad
         if st.button("⚙️", key="edit_btn"):
             st.session_state["edit_mode"] = not st.session_state["edit_mode"]
         st.markdown("</div>", unsafe_allow_html=True)
