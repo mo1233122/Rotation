@@ -12,7 +12,7 @@ START_DATUM = date(2026, 8, 6)
 
 
 # ---------------------------------------------------------
-# Datenhaltung & Logik
+# Datenhaltung & Logik (Unverändert & stabil)
 # ---------------------------------------------------------
 def lade_daten():
     if DATEI.exists():
@@ -105,7 +105,7 @@ def berechne_rotation_fuer_datum(ziel_datum: date, daten: dict):
 
 
 # ---------------------------------------------------------
-# Page Setup & Base CSS
+# Page Setup & Exact CSS Layout
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="NXP ServiceMGMT Meeting Rotation",
@@ -113,6 +113,7 @@ st.set_page_config(
     layout="centered",
 )
 
+# Wir nutzen CSS Grid für die Meeting-Zeile um alles perfekt auszurichten
 st.markdown(
     """
 <style>
@@ -132,23 +133,21 @@ st.markdown(
         color: #FFFFFF;
         font-weight: 800;
         font-size: 1.8rem;
-        margin-bottom: 20px;
+        margin-bottom: 12px;
+        white-space: nowrap;
     }
 
-    /* KALENDER CARD WRAPPER - Garantiert stabiles Grid */
-    .calendar-card {
+    /* Kalenderblock */
+    div.cal-block-wrapper div.stHorizontalBlock {
         background-color: #1C1B1A;
         border: 1px solid #3A3836;
         border-radius: 12px;
         padding: 20px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        margin-bottom: 16px;
     }
 
-    /* Monatsanzeige & Pfeile im Header */
-    .cal-header-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+    .month-header-row {
         margin-bottom: 16px;
     }
 
@@ -156,121 +155,148 @@ st.markdown(
         font-size: 1.35rem;
         font-weight: 700;
         color: #FFFFFF;
-    }
-
-    .nav-btn-link {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 34px;
-        height: 34px;
-        background-color: #D9383A;
-        color: #FFFFFF !important;
-        text-decoration: none !important;
-        border-radius: 8px;
-        font-weight: bold;
-        font-size: 1.1rem;
-        transition: background-color 0.2s;
-    }
-
-    .nav-btn-link:hover {
-        background-color: #B52B2D;
-    }
-
-    /* Grid Layout für Tage */
-    .cal-grid {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 8px;
-        text-align: center;
-    }
-
-    .day-name {
-        font-size: 1rem;
-        font-weight: 700;
-        color: #B0B0B0;
-        padding-bottom: 8px;
-    }
-
-    /* Tage Styling */
-    .cal-day {
-        height: 42px;
         display: flex;
         align-items: center;
-        justify-content: center;
-        font-size: 1rem;
-        font-weight: 600;
-        border-radius: 8px;
-        color: #FFFFFF;
+        height: 36px;
     }
 
-    .cal-day.weekend {
-        background-color: #2A2928;
-    }
-
-    /* Donnerstags-Klickbare Links */
-    a.thursday-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 42px;
-        background-color: #D9383A;
+    /* Pfeil-Buttons oben rechts */
+    div[data-testid="stHorizontalBlock"] div.stButton > button {
+        border-radius: 8px !important;
+        background-color: #D9383A !important;
         color: #FFFFFF !important;
-        text-decoration: none !important;
-        font-weight: 700;
-        border-radius: 8px;
-        box-shadow: 0 3px 8px rgba(217, 56, 58, 0.3);
-        transition: transform 0.1s, background-color 0.2s;
-    }
-
-    a.thursday-btn:hover {
-        background-color: #B52B2D;
-        transform: translateY(-1px);
-    }
-
-    a.thursday-btn.selected {
-        outline: 2px solid #FFFFFF;
-    }
-
-    a.thursday-btn.cancelled {
-        background-color: #55514E !important;
-        box-shadow: none !important;
+        border: none !important;
+        font-weight: bold !important;
+        height: 36px !important;
+        width: 36px !important;
+        padding: 0 !important;
     }
 
     /* Trennstriche */
     .cal-divider {
         border-bottom: 1px solid #3A3836;
-        margin: 20px 0;
+        margin: 14px 0 16px 0;
     }
 
-    /* ELEGANTER BEARBEITEN-LINK */
-    .edit-action-link {
-        color: #4A90E2 !important;
-        text-decoration: underline !important;
-        font-size: 0.95rem;
+    /* FIX FÜR SPALTEN-ALIGNMENT & KEIN NEULADEN */
+    /* Wir zwingen alle Spalten auf exakt dieselbe Breite und dasselbe Padding, 
+       egal ob Button oder Text */
+    div[data-testid="column"] {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 0 3px !important;
+    }
+
+    .day-header {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #E0E0E0;
+        text-align: center;
+        margin-bottom: 6px;
+    }
+
+    .day-cell {
+        width: 100%;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.05rem;
         font-weight: 600;
-        cursor: pointer;
-        background: none;
-        border: none;
-        padding: 0;
+        color: #FFFFFF;
+        border-radius: 8px;
+        box-sizing: border-box;
     }
 
-    .edit-action-link:hover {
-        color: #6BA4E8 !important;
+    .day-cell.weekend {
+        background-color: #333230;
     }
 
-    /* Rollenkarten */
+    /* ISOLIERTER STYLING-CONTAINER FÜR DONNERSTAGE */
+    /* Das CSS im div-Wrapper sorgt dafür, dass nur Donnerstage rot sind, 
+       ohne das globale st.button Design anzufassen. 
+       Gleichzeitig bleibt es ein nativer Streamlit-Button (kein Neuladen!) */
+    .thursday-btn-container {
+        width: 100%;
+    }
+
+    .thursday-btn-container div.stButton {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+    }
+
+    .thursday-btn-container div.stButton > button {
+        width: 100% !important;
+        height: 44px !important;
+        background-color: #D9383A !important;
+        color: #FFFFFF !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-size: 1.05rem !important;
+        font-weight: 700 !important;
+        padding: 0 !important;
+        box-shadow: 0 3px 8px rgba(217, 56, 58, 0.3) !important;
+    }
+
+    .thursday-btn-container div.stButton > button:hover {
+        background-color: #B52B2D !important;
+    }
+
+    /* Button für abgesagte Meetings */
+    .thursday-btn-container.cancelled div.stButton > button {
+        background-color: #55514E !important;
+        box-shadow: none !important;
+    }
+
+    /* --- UNTERER BEREICH: MEETING HEADER ZEILE --- */
+    /* Wir nutzen CSS Grid um die Überschrift und den Button auf eine Höhe 
+       und rechtsbündig zu zwingen */
+    .meeting-header-zeile {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        margin-top: 10px;
+        margin-bottom: 15px;
+    }
+
     .meeting-section-header {
         font-size: 1.25rem;
         font-weight: 700;
         color: #FFFFFF;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
 
+    /* BEARBEITEN BUTTON: Exakt rechtsbündig und höhenmäßig bündig */
+    .bearbeiten-btn-wrapper {
+        text-align: right;
+    }
+
+    .bearbeiten-btn-wrapper div.stButton > button {
+        background-color: #1E1E1D !important;
+        color: #FFFFFF !important;
+        border-radius: 6px !important;
+        padding: 6px 12px !important;
+        font-weight: 600 !important;
+        font-size: 0.85rem !important;
+        box-shadow: none !important;
+        height: 32px !important;
+        border: 1px solid #3A3836 !important;
+    }
+
+    .bearbeiten-btn-wrapper div.stButton > button:hover {
+        background-color: rgba(255, 255, 255, 0.05) !important;
+        border-color: #FFFFFF !important;
+    }
+
+    /* Rollenkarten */
     .role-container {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 12px;
-        margin-top: 15px;
     }
 
     .role-card {
@@ -305,23 +331,27 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+# App-Titel
+st.markdown(
+    "<h1 class='header-title'>NXP ServiceMGMT Meeting Rotation</h1>",
+    unsafe_allow_html=True,
+)
+
 # ---------------------------------------------------------
-# State & Query Parameters (URL Handler für Klicks)
+# State Handling
 # ---------------------------------------------------------
-params = st.query_params
 heute = date.today()
 
-# Monat / Jahr aus Parametern oder Fallback
-current_year = int(params.get("year", 2026 if heute.year < 2026 else heute.year))
-current_month = int(params.get("month", 8 if heute.year == 2026 else heute.month))
-
-# Datumsauswahl
-selected_date_str = params.get("selected_date", "2026-08-06")
-try:
-    selected_date = date.fromisoformat(selected_date_str)
-except Exception:
-    selected_date = date(2026, 8, 6)
-
+if "current_year" not in st.session_state:
+    st.session_state["current_year"] = (
+        2026 if heute.year < 2026 else heute.year
+    )
+if "current_month" not in st.session_state:
+    st.session_state["current_month"] = (
+        8 if heute.year == 2026 else heute.month
+    )
+if "selected_date" not in st.session_state:
+    st.session_state["selected_date"] = None
 if "edit_mode" not in st.session_state:
     st.session_state["edit_mode"] = False
 
@@ -341,108 +371,123 @@ monate_namen = [
 ]
 
 # ---------------------------------------------------------
-# App-Titel
+# Monats-Header & Navigation (Rote Pfeile)
 # ---------------------------------------------------------
-st.markdown(
-    "<h1 class='header-title'>NXP ServiceMGMT Meeting Rotation</h1>",
-    unsafe_allow_html=True,
+st.markdown("<div class='month-header-row cal-block-wrapper'>", unsafe_allow_html=True)
+col_title, col_prev, col_next = st.columns([6, 1, 1])
+
+with col_title:
+    st.markdown(
+        f"<div class='month-header-text'>{monate_namen[st.session_state['current_month'] - 1]} {st.session_state['current_year']}</div>",
+        unsafe_allow_html=True,
+    )
+
+with col_prev:
+    if st.button("❮", key="prev_month"):
+        if st.session_state["current_month"] == 1:
+            st.session_state["current_month"] = 12
+            st.session_state["current_year"] -= 1
+        else:
+            st.session_state["current_month"] -= 1
+        st.session_state["selected_date"] = None
+        st.session_state["edit_mode"] = False
+        st.rerun()
+
+with col_next:
+    if st.button("❯", key="next_month"):
+        if st.session_state["current_month"] == 12:
+            st.session_state["current_month"] = 1
+            st.session_state["current_year"] += 1
+        else:
+            st.session_state["current_month"] += 1
+        st.session_state["selected_date"] = None
+        st.session_state["edit_mode"] = False
+        st.rerun()
+st.markdown("</div>", unsafe_allow_html=True)
+
+# ---------------------------------------------------------
+# KALENDER RENDERN (Perfect Columns)
+# ---------------------------------------------------------
+st.markdown("<div class='cal-block-wrapper'>", unsafe_allow_html=True)
+wochentage_kurz = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
+cols_header = st.columns(7)
+for i, col in enumerate(cols_header):
+    col.markdown(
+        f"<div class='day-header'>{wochentage_kurz[i]}</div>",
+        unsafe_allow_html=True,
+    )
+
+cal = calendar.Calendar(firstweekday=0)
+monats_tage = cal.monthdatescalendar(
+    st.session_state["current_year"], st.session_state["current_month"]
 )
 
-# ---------------------------------------------------------
-# KALENDER RENDERN (In HTML Card für 100% stabiles Grid)
-# ---------------------------------------------------------
-# Naechster & Vorheriger Monat berechnen
-if current_month == 1:
-    prev_m, prev_y = 12, current_year - 1
-else:
-    prev_m, prev_y = current_month - 1, current_year
-
-if current_month == 12:
-    next_m, next_y = 1, current_year + 1
-else:
-    next_m, next_y = current_month + 1, current_year
-
-# Header der Card
-card_html = f"""
-<div class="calendar-card">
-    <div class="cal-header-row">
-        <div class="month-header-text">{monate_namen[current_month - 1]} {current_year}</div>
-        <div>
-            <a href="?month={prev_m}&year={prev_y}&selected_date={selected_date_str}" target="_self" class="nav-btn-link">❮</a>
-            <a href="?month={next_m}&year={next_y}&selected_date={selected_date_str}" target="_self" class="nav-btn-link" style="margin-left: 6px;">❯</a>
-        </div>
-    </div>
-    <div class="cal-grid">
-        <div class="day-name">Mo</div>
-        <div class="day-name">Di</div>
-        <div class="day-name">Mi</div>
-        <div class="day-name">Do</div>
-        <div class="day-name">Fr</div>
-        <div class="day-name">Sa</div>
-        <div class="day-name">So</div>
-"""
-
-# Kalendertage berechnen
-cal = calendar.Calendar(firstweekday=0)
-monats_tage = cal.monthdatescalendar(current_year, current_month)
-
 for woche in monats_tage:
+    st.markdown("<div class='cal-divider'></div>", unsafe_allow_html=True)
+    cols = st.columns(7)
     for i, tag in enumerate(woche):
-        if tag.month != current_month:
-            card_html += '<div class="cal-day"></div>'
-        elif tag.weekday() == 3 and tag >= START_DATUM:
-            rot = berechne_rotation_fuer_datum(tag, daten)
-            is_cancelled = rot["ausfall"] if rot else False
-            is_sel = tag == selected_date
+        with cols[i]:
+            if tag.month != st.session_state["current_month"]:
+                st.markdown(
+                    "<div class='day-cell'></div>", unsafe_allow_html=True
+                )
+            elif tag.weekday() == 3 and tag >= START_DATUM:
+                rot = berechne_rotation_fuer_datum(tag, daten)
+                btn_class = (
+                    "thursday-btn-container cancelled"
+                    if rot["ausfall"]
+                    else "thursday-btn-container"
+                )
 
-            cls = "thursday-btn"
-            if is_cancelled:
-                cls += " cancelled"
-            if is_sel:
-                cls += " selected"
+                # Wir nutzen Streamlit-native st.button, um kein Neuladen zu erzwingen
+                st.markdown(f"<div class='{btn_class}'>", unsafe_allow_html=True)
+                if st.button(f"{tag.day}", key=f"btn_{tag.isoformat()}"):
+                    st.session_state["selected_date"] = tag
+                    st.session_state["edit_mode"] = False
+                    # st.rerun() entfernt -> Verhindert das Neuladen
+                st.markdown("</div>", unsafe_allow_html=True)
+            else:
+                is_weekend = i >= 5
+                weekend_cls = "weekend" if is_weekend else ""
+                st.markdown(
+                    f"<div class='day-cell {weekend_cls}'>{tag.day}</div>",
+                    unsafe_allow_html=True,
+                )
+st.markdown("</div>", unsafe_allow_html=True)
 
-            link = f"?month={current_month}&year={current_year}&selected_date={tag.isoformat()}"
-            card_html += f'<a href="{link}" target="_self" class="{cls}">{tag.day}</a>'
-        else:
-            weekend_cls = "weekend" if i >= 5 else ""
-            card_html += (
-                f'<div class="cal-day {weekend_cls}">{tag.day}</div>'
-            )
-
-card_html += """
-    </div>
-</div>
-"""
-
-st.markdown(card_html, unsafe_allow_html=True)
-
-# Trennlinie
-st.markdown("<div class='cal-divider'></div>", unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# UNTERER BEREICH: MEETING DETAILS & BEARBEITEN
+# UNTERER BEREICH: ROLLENANZEIGE & EDITING
 # ---------------------------------------------------------
-if selected_date and selected_date.weekday() == 3:
-    rot_info = berechne_rotation_fuer_datum(selected_date, daten)
+sel_tag = st.session_state.get("selected_date")
 
-    col_head, col_edit_btn = st.columns([5, 2])
-    with col_head:
-        st.markdown(
-            f"<div class='meeting-section-header'>👥 Meeting am {selected_date.strftime('%d.%m.%Y')}</div>",
-            unsafe_allow_html=True,
-        )
+if (
+    sel_tag
+    and sel_tag.month == st.session_state["current_month"]
+    and sel_tag.year == st.session_state["current_year"]
+):
+    sel_str = sel_tag.isoformat()
+    rot_info = berechne_rotation_fuer_datum(sel_tag, daten)
 
-    with col_edit_btn:
-        # Schlichter Textlink ohne roten Kasten
-        st.markdown(
-            "<div style='text-align: right;'>", unsafe_allow_html=True
-        )
-        if st.button("Bearbeiten", key="toggle_edit_link"):
-            st.session_state["edit_mode"] = not st.session_state["edit_mode"]
-            st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
+    # MEETING HEADER ZEILE: GRID FÜR PERFEKTES ALIGNMENT
+    st.markdown("<div class='meeting-header-zeile'>", unsafe_allow_html=True)
+    
+    # Teil 1: Die Überschrift (Links)
+    st.markdown(
+        f"<div class='meeting-section-header'>👥 Meeting am {sel_tag.strftime('%d.%m.%Y')}</div>",
+        unsafe_allow_html=True,
+    )
+    
+    # Teil 2: Der Bearbeiten-Button (Rechts)
+    st.markdown("<div class='bearbeiten-btn-wrapper'>", unsafe_allow_html=True)
+    if st.button("Bearbeiten", key="toggle_edit_link"):
+        st.session_state["edit_mode"] = not st.session_state["edit_mode"]
+        # st.rerun() entfernt -> Kein Neuladen
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    st.markdown("</div>", unsafe_allow_html=True) # Ende meeting-header-zeile
 
-    # Bearbeiten-Formular
+    # Bearbeitungs-Formular
     if st.session_state["edit_mode"]:
         st.info("🛠️ **Anpassung für diesen Tag**")
         with st.form("edit_form"):
@@ -483,7 +528,6 @@ if selected_date and selected_date.weekday() == 3:
                 if len(set(ausgewaehlt)) < 3 and not ist_ausfall_chk:
                     st.error("⚠️ Bitte wähle drei unterschiedliche Personen!")
                 else:
-                    sel_str = selected_date.isoformat()
                     if ist_ausfall_chk:
                         if sel_str not in daten["ausfaelle"]:
                             daten["ausfaelle"].append(sel_str)
