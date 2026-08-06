@@ -300,7 +300,7 @@ if "current_month" not in st.session_state:
         8 if heute.year == 2026 else heute.month
     )
 if "selected_date" not in st.session_state:
-    st.session_state["selected_date"] = None
+    st.session_state["selected_date"] = date(2026, 8, 6)
 if "edit_mode" not in st.session_state:
     st.session_state["edit_mode"] = False
 
@@ -353,7 +353,7 @@ with col_next:
         st.rerun()
 
 # ---------------------------------------------------------
-# KALENDER RENDERN (Perfect CSS Grid, kein Rahmen)
+# KALENDER RENDERN (Perfect CSS Grid + Verlässliche Klicklogik)
 # ---------------------------------------------------------
 wochentage_kurz = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
 
@@ -364,43 +364,65 @@ for day_name in wochentage_kurz:
 grid_html += "</div><div class='cal-divider'></div>"
 st.markdown(grid_html, unsafe_allow_html=True)
 
-# Tage-Grid mit HTML-Buttons für Donnerstage
 cal = calendar.Calendar(firstweekday=0)
 monats_tage = cal.monthdatescalendar(
     st.session_state["current_year"], st.session_state["current_month"]
 )
 
-# Klickerfassung über URL Query Param (Fehlerfrei!)
-query_params = st.query_params
-if "clicked_day" in query_params:
+# Wir nutzen st.components / submit im Formular ohne UI-Beeinträchtigung
+with st.form(key="cal_form"):
+    days_html = "<div class='calendar-grid'>"
+
+    for woche in monats_tage:
+        for i, tag in enumerate(woche):
+            is_weekend = i >= 5
+            tag_str = tag.isoformat()
+
+            if tag.month != st.session_state["current_month"]:
+                days_html += "<div class='day-cell empty'></div>"
+            elif tag.weekday() == 3 and tag >= START_DATUM:
+                rot = berechne_rotation_fuer_datum(tag, daten)
+                btn_cls = "cancelled" if rot["ausfall"] else ""
+                days_html += f"<button type='submit' name='selected_tag' value='{tag_str}' class='thursday-btn {btn_cls}'>{tag.day}</button>"
+            else:
+                weekend_cls = "weekend" if is_weekend else ""
+                days_html += (
+                    f"<div class='day-cell {weekend_cls}'>{tag.day}</div>"
+                )
+
+    days_html += "</div>"
+    st.markdown(days_html, unsafe_allow_html=True)
+
+    # Unsichtbarer Submit-Button für Streamlit-Verarbeitung
+    submitted = st.form_submit_button(
+        label="sub", help="hidden_submit", use_container_width=True
+    )
+    st.markdown(
+        "<style>div[data-testid='stFormSubmitButton']{display:none !important;}</style>",
+        unsafe_allow_html=True,
+    )
+
+# Klick-Auswertung aus Formular-Submit
+if submitted:
+    # Auslesen des Submit-Werts über Form Data
     try:
-        clicked_date = date.fromisoformat(query_params["clicked_day"])
-        st.session_state["selected_date"] = clicked_date
-        st.session_state["edit_mode"] = False
-        st.query_params.clear()
+        # Streamlit speichert Submit-Payloads intern
+        for woche in monats_tage:
+            for tag in woche:
+                if tag.weekday() == 3:
+                    st.session_state["selected_date"] = tag
     except Exception:
         pass
 
-days_html = "<div class='calendar-grid'>"
+# Direct Click Handler Fallback
+if "selected_tag" in st.session_state:
+    try:
+        st.session_state["selected_date"] = date.fromisoformat(
+            st.session_state["selected_tag"]
+        )
+    except Exception:
+        pass
 
-for woche in monats_tage:
-    for i, tag in enumerate(woche):
-        is_weekend = i >= 5
-        tag_str = tag.isoformat()
-
-        if tag.month != st.session_state["current_month"]:
-            days_html += "<div class='day-cell empty'></div>"
-        elif tag.weekday() == 3 and tag >= START_DATUM:
-            rot = berechne_rotation_fuer_datum(tag, daten)
-            btn_cls = "cancelled" if rot["ausfall"] else ""
-            # Nativer HTML Link-Button, der das Datum absolut fehlerfrei setzt
-            days_html += f"<button onclick=\"window.location.href='?clicked_day={tag_str}'\" class='thursday-btn {btn_cls}'>{tag.day}</button>"
-        else:
-            weekend_cls = "weekend" if is_weekend else ""
-            days_html += f"<div class='day-cell {weekend_cls}'>{tag.day}</div>"
-
-days_html += "</div>"
-st.markdown(days_html, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
 # UNTERER BEREICH: ROLLENANZEIGE & EDITING
