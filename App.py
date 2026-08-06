@@ -7,8 +7,8 @@ import streamlit as st
 # Speicherdatei-Pfad
 DATEI = Path(__file__).with_name("patho_rotation.json")
 
-# Standard-Personen für die Rotation (in fester Reihenfolge)
-STANDARD_PERSONEN = ["Veronika", "Moritz", "Lissi"]
+# Standard-Personen für die Rotation (Reihenfolge: Moritz -> Lissi -> Veronika)
+STANDARD_PERSONEN = ["Moritz", "Lissi", "Veronika"]
 START_DATUM = date(2026, 8, 6)  # Erster bekannter Donnerstag
 
 
@@ -38,7 +38,7 @@ daten = lade_daten()
 
 
 # ---------------------------------------------------------
-# Rotations-Logik
+# Kaskadierende Rotations-Logik
 # ---------------------------------------------------------
 def alle_donnerstage_bis(ziel_datum: date):
     aktuell = START_DATUM
@@ -54,24 +54,22 @@ def berechne_rotation_fuer_datum(ziel_datum: date, daten: dict):
         return None
 
     ziel_str = ziel_datum.isoformat()
-
-    if ziel_str in daten.get("manuelle_anpassungen", {}):
-        anpassung = daten["manuelle_anpassungen"][ziel_str]
-        return {
-            "datum": ziel_datum,
-            "ausfall": ziel_str in daten.get("ausfaelle", []),
-            "mod": anpassung["mod"],
-            "proto": anpassung["proto"],
-            "pause": anpassung["pause"],
-            "manuell": True,
-        }
-
     alle_ststage = alle_donnerstage_bis(ziel_datum)
+    personen = daten.get("personen", STANDARD_PERSONEN)
+    n = len(personen)
+
+    # Wir berechnen Schritt für Schritt ab dem START_DATUM bis zum ziel_datum
     aktiver_index = 0
 
     for d in alle_ststage:
         d_str = d.isoformat()
         ist_ausfall = d_str in daten.get("ausfaelle", [])
+
+        # Wenn an diesem Tag eine manuelle Anpassung vorliegt, synchronisieren wir den Rotationsindex neu
+        if d_str in daten.get("manuelle_anpassungen", {}):
+            man_mod = daten["manuelle_anpassungen"][d_str]["mod"]
+            if man_mod in personen:
+                aktiver_index = personen.index(man_mod)
 
         if d == ziel_datum:
             if ist_ausfall:
@@ -81,28 +79,37 @@ def berechne_rotation_fuer_datum(ziel_datum: date, daten: dict):
                     "mod": "-",
                     "proto": "-",
                     "pause": "-",
-                    "manuell": False,
+                    "manuell": ziel_str in daten.get("manuelle_anpassungen", {}),
                 }
-            break
 
+            # Falls für das Ziel-Datum selbst eine manuelle Einstellung existiert
+            if ziel_str in daten.get("manuelle_anpassungen", {}):
+                anpassung = daten["manuelle_anpassungen"][ziel_str]
+                return {
+                    "datum": ziel_datum,
+                    "ausfall": False,
+                    "mod": anpassung["mod"],
+                    "proto": anpassung["proto"],
+                    "pause": anpassung["pause"],
+                    "manuell": True,
+                }
+
+            mod = personen[aktiver_index % n]
+            proto = personen[(aktiver_index + 1) % n]
+            pause = personen[(aktiver_index + 2) % n]
+
+            return {
+                "datum": ziel_datum,
+                "ausfall": False,
+                "mod": mod,
+                "proto": proto,
+                "pause": pause,
+                "manuell": False,
+            }
+
+        # Wenn das Meeting nicht ausfällt, geht die Rotation für den nächsten Donnerstag einen Schritt weiter
         if not ist_ausfall:
             aktiver_index += 1
-
-    personen = daten.get("personen", STANDARD_PERSONEN)
-    n = len(personen)
-
-    mod = personen[aktiver_index % n]
-    proto = personen[(aktiver_index + 1) % n]
-    pause = personen[(aktiver_index + 2) % n]
-
-    return {
-        "datum": ziel_datum,
-        "ausfall": False,
-        "mod": mod,
-        "proto": proto,
-        "pause": pause,
-        "manuell": False,
-    }
 
 
 # ---------------------------------------------------------
@@ -121,19 +128,26 @@ st.markdown(
         color: #e2e8f0;
     }
     
-    /* Einzeilige, gut lesbare Überschrift */
+    /* Einzeilige Überschrift */
     .header-title {
         text-align: center;
         color: #f8fafc;
         font-weight: 700;
-        font-size: 1.8rem;
+        font-size: clamp(1.2rem, 4vw, 1.8rem);
         white-space: nowrap;
         margin-top: -10px;
         margin-bottom: 25px;
         letter-spacing: -0.5px;
     }
     
-    /* Rollenkarten */
+    /* Rollenkarten Grid */
+    .role-container {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-top: 10px;
+    }
+
     .role-card {
         background-color: #1e2228;
         border-radius: 12px;
@@ -150,6 +164,7 @@ st.markdown(
         border-top-color: #f87171; 
         background-color: #261a1a; 
         border: 1px solid #451a1a;
+        grid-column: span 3;
     }
     
     .role-title {
@@ -164,9 +179,10 @@ st.markdown(
         font-size: 1.4rem;
         font-weight: 700;
         color: #f1f5f9;
+        word-break: break-word;
     }
-    
-    /* Kalenderzellen */
+
+    /* Kalenderzellen mit klarem vertikalen Abstand */
     .weekend-cell {
         background-color: #1a1d24;
         border-radius: 6px;
@@ -174,11 +190,13 @@ st.markdown(
         text-align: center;
         color: #475569;
         font-weight: 500;
+        margin-bottom: 8px; /* Sorgt dafür, dass sich Zellen nicht berühren */
     }
     .weekday-cell {
         text-align: center;
         padding: 8px 0;
         color: #94a3b8;
+        margin-bottom: 8px;
     }
     .header-day {
         text-align: center;
@@ -193,16 +211,24 @@ st.markdown(
         margin-bottom: 8px;
     }
 
-    /* Anpassungen für Streamlit-Inputs & Widgets */
-    div[data-baseweb="select"] > div {
+    /* Streamlit Buttons styling */
+    div.stButton > button {
+        margin-bottom: 8px !important;
+    }
+
+    div[data-baseweb="select"] > div, div[data-baseweb="input"] > div {
         background-color: #1e2228 !important;
         color: #f8fafc !important;
         border-color: #2d333b !important;
     }
-    div[data-baseweb="input"] > div {
-        background-color: #1e2228 !important;
-        color: #f8fafc !important;
-        border-color: #2d333b !important;
+
+    @media (max-width: 640px) {
+        .role-container {
+            grid-template-columns: 1fr;
+        }
+        .role-card.cancelled {
+            grid-column: span 1;
+        }
     }
 </style>
 """,
@@ -348,18 +374,20 @@ if sel_tag:
             )
 
             st.write("**Eingeteilte Personen anpassen:**")
-            mod_val = st.text_input(
-                "🎤 Moderierer",
-                value=rot_info["mod"] if not rot_info["ausfall"] else "Veronika",
-            )
-            proto_val = st.text_input(
-                "📝 Protokollierer",
-                value=rot_info["proto"] if not rot_info["ausfall"] else "Moritz",
-            )
-            pause_val = st.text_input(
-                "☕ Pause",
-                value=rot_info["pause"] if not rot_info["ausfall"] else "Lissi",
-            )
+
+            # Hilfsfunktion zur Ermittlung passender Folgerollen bei der Auswahl
+            personen_liste = daten.get("personen", STANDARD_PERSONEN)
+            current_mod = rot_info["mod"] if rot_info["mod"] in personen_liste else personen_liste[0]
+            
+            mod_wahl = st.selectbox("🎤 Moderator*in", personen_liste, index=personen_liste.index(current_mod))
+            
+            # Automatische Vorschläge für Protokoll & Pause basierend auf der Wahl des Moderators
+            mod_idx = personen_liste.index(mod_wahl)
+            proto_default = personen_liste[(mod_idx + 1) % len(personen_liste)]
+            pause_default = personen_liste[(mod_idx + 2) % len(personen_liste)]
+
+            proto_val = st.text_input("📝 Protokollant*in", value=proto_default)
+            pause_val = st.text_input("☕ Pause", value=pause_default)
 
             speichern_btn = st.form_submit_button("Speichern")
 
@@ -375,68 +403,55 @@ if sel_tag:
                     daten["manuelle_anpassungen"] = {}
 
                 daten["manuelle_anpassungen"][sel_str] = {
-                    "mod": mod_val,
+                    "mod": mod_wahl,
                     "proto": proto_val,
                     "pause": pause_val,
                 }
 
                 speichere_daten(daten)
                 st.session_state["edit_mode"] = False
-                st.success("Erfolgreich gespeichert!")
+                st.success("Erfolgreich gespeichert! Alle nachfolgenden Tage passen sich nun an.")
                 st.rerun()
 
-    # --- ANZEIGE-MODUS (Farbige Kacheln im Dark Look) ---
+    # --- ANZEIGE-MODUS ---
     else:
         if rot_info["ausfall"]:
             st.markdown(
                 """
-                <div class='role-card cancelled'>
-                    <div class='role-title' style='color: #f87171;'>Meeting Status</div>
-                    <div class='role-person' style='color: #fca5a5;'>❌ Abgesagt / Ausfall</div>
-                    <p style='color: #cbd5e1; margin-top: 8px; font-size: 0.85rem;'>
-                        Die Rotation wird für die darauffolgende Woche fortgesetzt.
-                    </p>
+                <div class='role-container'>
+                    <div class='role-card cancelled'>
+                        <div class='role-title' style='color: #f87171;'>Meeting Status</div>
+                        <div class='role-person' style='color: #fca5a5;'>❌ Abgesagt / Ausfall</div>
+                        <p style='color: #cbd5e1; margin-top: 8px; font-size: 0.85rem;'>
+                            Die Rotation wird für die darauffolgende Woche fortgesetzt.
+                        </p>
+                    </div>
                 </div>
                 """,
                 unsafe_allow_html=True,
             )
         else:
-            col_a, col_b, col_c = st.columns(3)
-
-            with col_a:
-                st.markdown(
-                    f"""
+            st.markdown(
+                f"""
+                <div class='role-container'>
                     <div class='role-card mod'>
-                        <div class='role-title'>🎤 Moderierer</div>
+                        <div class='role-title'>🎤 Moderator*in</div>
                         <div class='role-person'>{rot_info['mod']}</div>
                     </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
-
-            with col_b:
-                st.markdown(
-                    f"""
                     <div class='role-card proto'>
-                        <div class='role-title'>📝 Protokollierer</div>
+                        <div class='role-title'>📝 Protokollant*in</div>
                         <div class='role-person'>{rot_info['proto']}</div>
                     </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
-
-            with col_c:
-                st.markdown(
-                    f"""
                     <div class='role-card pause'>
                         <div class='role-title'>☕ Pause</div>
                         <div class='role-person'>{rot_info['pause']}</div>
                     </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
 else:
     st.info(
-        "👈 Klicken Sie auf einen blau markierten Donnerstag (📌) im Kalender, um die Rollenverteilung anzuzeigen."
+        "👈 Klicken Sie auf einen rot markierten Donnerstag (📌) im Kalender, um die Rollenverteilung anzuzeigen."
     )
