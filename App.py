@@ -127,7 +127,7 @@ st.markdown(
         padding-top: 2rem !important;
     }
 
-    /* Überschrift leicht verkleinert, damit sie in einer Zeile Platz hat */
+    /* Haupt-Überschrift einzeilig */
     .header-title {
         color: #FFFFFF;
         font-weight: 800;
@@ -245,7 +245,7 @@ st.markdown(
         margin-bottom: 15px;
     }
 
-    /* LINK UNTER DEN ROLLEN (Links bündig) */
+    /* LINK UNTER DEN ROLLEN */
     .edit-text-link div.stButton > button {
         background-color: transparent !important;
         color: #A0A0A0 !important;
@@ -288,11 +288,12 @@ st.markdown(
         grid-column: span 3;
     }
 
+    /* HIER VERGRÖSSERT: Rollen-Titel (Icon + text) */
     .role-title {
-        font-size: 0.8rem;
-        font-weight: 600;
-        color: #9E9E9E;
-        margin-bottom: 4px;
+        font-size: 0.98rem;
+        font-weight: 700;
+        color: #C0C0C0;
+        margin-bottom: 6px;
     }
     .role-person {
         font-size: 1.25rem;
@@ -327,7 +328,7 @@ monate_namen = [
     "Juli", "August", "September", "Oktober", "November", "Dezember"
 ]
 
-# Title - PASST JETZT PERFEKT IN EINE ZEILE
+# Title
 st.markdown(
     "<h1 class='header-title'>NXP ServiceMGMT Meeting Rotation</h1>",
     unsafe_allow_html=True,
@@ -502,7 +503,7 @@ if selected_date and selected_date.weekday() == 3:
                 unsafe_allow_html=True,
             )
 
-    # LINKSBÜNDIGER TEXT-LINK UNTER DEN ROLLEN
+    # Text-Link unter den Rollen
     st.markdown("<div class='edit-text-link'>", unsafe_allow_html=True)
     btn_text = "Abbrechen" if st.session_state["edit_mode"] else "Bearbeiten"
     if st.button(btn_text, key="toggle_edit_mode"):
