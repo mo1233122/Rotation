@@ -142,16 +142,16 @@ st.markdown(
         color: #FFFFFF;
     }
 
-    /* Pfeil-Buttons oben rechts */
+    /* Rote Navigations-Pfeile oben rechts */
     div[data-testid="stHorizontalBlock"] div.stButton > button {
-        border-radius: 8px !important;
-        background-color: #D9383A !important;
-        color: #FFFFFF !important;
-        border: none !important;
-        font-weight: bold !important;
-        height: 36px !important;
-        width: 36px !important;
-        padding: 0 !important;
+        border-radius: 8px;
+        background-color: #D9383A;
+        color: #FFFFFF;
+        border: none;
+        font-weight: bold;
+        height: 36px;
+        width: 36px;
+        padding: 0;
     }
 
     /* Trennstriche */
@@ -160,16 +160,7 @@ st.markdown(
         margin: 14px 0 16px 0;
     }
 
-    /* PERFECT FIXED CSS GRID (Verschiebt sich garantiert nie mehr) */
-    .calendar-grid {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 8px;
-        align-items: center;
-        justify-items: center;
-        width: 100%;
-    }
-
+    /* Kalender-Grid CSS (Absolut starr) */
     .day-header {
         font-size: 1.15rem;
         font-weight: 700;
@@ -195,43 +186,48 @@ st.markdown(
         background-color: #333230;
     }
 
-    .day-cell.empty {
-        visibility: hidden;
+    /* Streamlit Spalten-Padding auf 0 setzen für exaktes Raster */
+    [data-testid="column"] {
+        padding: 0 2px !important;
     }
 
-    /* Donnerstags-Buttons im Grid */
-    .thursday-btn {
-        width: 100%;
-        height: 44px;
-        background-color: #D9383A;
-        color: #FFFFFF;
-        border: none;
-        border-radius: 8px;
-        font-size: 1.05rem;
-        font-weight: 700;
-        cursor: pointer;
-        transition: transform 0.1s, background-color 0.15s;
-        box-shadow: 0 3px 8px rgba(217, 56, 58, 0.3);
-    }
-    .thursday-btn:hover {
-        background-color: #B52B2D;
-        transform: scale(1.02);
-    }
-    .thursday-btn.cancelled {
-        background-color: #55514E;
-        box-shadow: none;
-    }
-
-    /* Zahnrad Button unten */
-    .gear-icon-btn div.stButton > button {
+    /* Donnerstags-Buttons im Streamlit-Grid */
+    .thursday-wrapper div.stButton > button {
         background-color: #D9383A !important;
+        color: #FFFFFF !important;
+        border: none !important;
         border-radius: 8px !important;
+        font-size: 1.05rem !important;
+        font-weight: 700 !important;
+        height: 44px !important;
+        width: 100% !important;
+        padding: 0 !important;
+        box-shadow: 0 3px 8px rgba(217, 56, 58, 0.3) !important;
+    }
+    
+    .thursday-wrapper.cancelled div.stButton > button {
+        background-color: #55514E !important;
+        box-shadow: none !important;
+    }
+
+    /* NEU: Zahnrad Button OHNE roten Hintergrund */
+    .gear-icon-btn div.stButton > button {
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        font-size: 1.4rem !important;
         height: 36px !important;
         width: 36px !important;
-        font-size: 1.1rem !important;
+        padding: 0 !important;
+        cursor: pointer !important;
+        opacity: 0.85;
+    }
+    .gear-icon-btn div.stButton > button:hover {
+        opacity: 1.0;
+        background-color: rgba(255, 255, 255, 0.05) !important;
     }
 
-    /* Rollenkarten */
+    /* Rollenkarten unten */
     .meeting-section-header {
         font-size: 1.25rem;
         font-weight: 700;
@@ -354,15 +350,18 @@ with col_next:
         st.rerun()
 
 # ---------------------------------------------------------
-# KALENDER RENDERN (Perfektes CSS Grid)
+# KALENDER RENDERN (Raster & Funktion perfekt kombiniert)
 # ---------------------------------------------------------
 wochentage_kurz = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
 
 # Wochentage Header
-grid_html = "<div class='calendar-grid'>"
-for day_name in wochentage_kurz:
-    grid_html += f"<div class='day-header'>{day_name}</div>"
-grid_html += "</div><div class='cal-divider'></div>"
+cols_h = st.columns(7)
+for i, name in enumerate(wochentage_kurz):
+    cols_h[i].markdown(
+        f"<div class='day-header'>{name}</div>", unsafe_allow_html=True
+    )
+
+st.markdown("<div class='cal-divider'></div>", unsafe_allow_html=True)
 
 # Tage rendern
 cal = calendar.Calendar(firstweekday=0)
@@ -370,37 +369,34 @@ monats_tage = cal.monthdatescalendar(
     st.session_state["current_year"], st.session_state["current_month"]
 )
 
-# Klick-Auswertung über unsichtbare Buttons/Query
-clicked_tag = st.query_params.get("click", None)
-if clicked_tag:
-    try:
-        st.session_state["selected_date"] = date.fromisoformat(clicked_tag)
-        st.query_params.clear()
-        st.rerun()
-    except Exception:
-        pass
-
-grid_html += "<div class='calendar-grid'>"
 for woche in monats_tage:
+    cols = st.columns(7)
     for i, tag in enumerate(woche):
-        is_weekend = i >= 5
-        tag_str = tag.isoformat()
+        with cols[i]:
+            if tag.month != st.session_state["current_month"]:
+                st.markdown(
+                    "<div class='day-cell'></div>", unsafe_allow_html=True
+                )
+            elif tag.weekday() == 3 and tag >= START_DATUM:
+                rot = berechne_rotation_fuer_datum(tag, daten)
+                btn_cls = "cancelled" if rot["ausfall"] else ""
 
-        if tag.month != st.session_state["current_month"]:
-            grid_html += "<div class='day-cell empty'></div>"
-        elif tag.weekday() == 3 and tag >= START_DATUM:
-            rot = berechne_rotation_fuer_datum(tag, daten)
-            btn_cls = "cancelled" if rot["ausfall"] else ""
-            # Nativer Link-Klick im HTML-Grid hält das Layout bombensicher auf Kurs
-            grid_html += f"<button onclick=\"window.location.href='?click={tag_str}'\" class='thursday-btn {btn_cls}'>{tag.day}</button>"
-        else:
-            weekend_cls = "weekend" if is_weekend else ""
-            grid_html += (
-                f"<div class='day-cell {weekend_cls}'>{tag.day}</div>"
-            )
-
-grid_html += "</div>"
-st.markdown(grid_html, unsafe_allow_html=True)
+                st.markdown(
+                    f"<div class='thursday-wrapper {btn_cls}'>",
+                    unsafe_allow_html=True,
+                )
+                if st.button(f"{tag.day}", key=f"btn_{tag.isoformat()}"):
+                    st.session_state["selected_date"] = tag
+                    st.session_state["edit_mode"] = False
+                    st.rerun()
+                st.markdown("</div>", unsafe_allow_html=True)
+            else:
+                is_weekend = i >= 5
+                weekend_cls = "weekend" if is_weekend else ""
+                st.markdown(
+                    f"<div class='day-cell {weekend_cls}'>{tag.day}</div>",
+                    unsafe_allow_html=True,
+                )
 
 # Trennlinie direkt unter dem Kalender
 st.markdown("<div class='cal-divider'></div>", unsafe_allow_html=True)
@@ -427,7 +423,7 @@ if (
 
     with col_edit_btn:
         st.markdown("<div class='gear-icon-btn'>", unsafe_allow_html=True)
-        # NEU: Zahnrad Symbol ⚙️
+        # Zahnrad OHNE roten Hintergrund
         if st.button("⚙️", key="edit_btn"):
             st.session_state["edit_mode"] = not st.session_state["edit_mode"]
         st.markdown("</div>", unsafe_allow_html=True)
