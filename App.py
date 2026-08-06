@@ -7,13 +7,12 @@ import streamlit as st
 # Speicherdatei-Pfad
 DATEI = Path(__file__).with_name("patho_rotation.json")
 
-# Standard-Personen für die Rotation (Reihenfolge: Moritz -> Lissi -> Veronika)
 STANDARD_PERSONEN = ["Moritz", "Lissi", "Veronika"]
 START_DATUM = date(2026, 8, 6)  # Erster bekannter Donnerstag
 
 
 # ---------------------------------------------------------
-# Datenhaltung (Laden / Speichern)
+# Datenhaltung
 # ---------------------------------------------------------
 def lade_daten():
     if DATEI.exists():
@@ -38,7 +37,7 @@ daten = lade_daten()
 
 
 # ---------------------------------------------------------
-# Kaskadierende Rotations-Logik
+# Rotations-Logik
 # ---------------------------------------------------------
 def alle_donnerstage_bis(ziel_datum: date):
     aktuell = START_DATUM
@@ -109,7 +108,7 @@ def berechne_rotation_fuer_datum(ziel_datum: date, daten: dict):
 
 
 # ---------------------------------------------------------
-# Page Setup & Greige / Eggshell Styling
+# Page Setup & Styling
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="Patho ServiceMGMT Rotation", page_icon="📅", layout="centered"
@@ -118,156 +117,136 @@ st.set_page_config(
 st.markdown(
     """
 <style>
-    /* Warmes Eggshell/Greige Theme */
+    /* Dunklerer/Warmer Greige Hintergrund */
     .stApp {
-        background-color: #f4f1ea;
-        color: #2c2a29;
+        background-color: #E6E1DA;
+        color: #2D2B2A;
     }
 
     .header-title {
         text-align: center;
-        color: #2c2a29;
-        font-weight: 700;
-        font-size: clamp(1.4rem, 4vw, 1.9rem);
-        white-space: nowrap;
-        margin-top: -15px;
-        margin-bottom: 25px;
+        color: #2D2B2A;
+        font-weight: 800;
+        font-size: clamp(1.4rem, 4vw, 2.0rem);
+        margin-top: -10px;
+        margin-bottom: 20px;
         letter-spacing: -0.5px;
     }
 
-    /* Kalender-Card */
-    .calendar-card {
-        background-color: #efece6;
+    /* Helle Kalender Card, die sich gut abhebt */
+    .cal-card-wrapper {
+        background-color: #FFFFFF;
         border-radius: 20px;
-        padding: 24px 20px 16px 20px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
-        border: 1px solid #e2ddd5;
-        margin-bottom: 25px;
+        padding: 24px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+        border: 1px solid #D8D2C9;
+        max-width: 520px;
+        margin: 0 auto;
     }
 
-    /* Monatszeile & Pfeile */
     .month-header {
-        font-size: 1.5rem;
+        font-size: 1.4rem;
         font-weight: 700;
-        color: #1f1e1d;
+        color: #1F1E1D;
     }
 
-    /* Kalender Grid CSS */
-    .cal-grid {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        text-align: center;
-        margin-top: 15px;
-        border-radius: 12px;
-        overflow: hidden;
+    /* Pfeilbuttons oben rechts */
+    div[data-testid="stHorizontalBlock"] div.stButton > button {
+        border-radius: 8px !important;
+        background-color: #FF2A55 !important;
+        color: white !important;
+        border: none !important;
+        font-weight: bold !important;
+        height: 38px !important;
+        width: 38px !important;
+        padding: 0 !important;
+    }
+
+    /* Donnerstags-Buttons (Neon-Rot/Rosa wie Bild) */
+    .thursday-btn button {
+        background-color: #FF2A55 !important;
+        color: white !important;
+        border-radius: 8px !important;
+        border: none !important;
+        font-weight: 700 !important;
+        height: 36px !important;
+        width: 36px !important;
+        margin: 0 auto !important;
+        display: block !important;
+        box-shadow: 0 4px 10px rgba(255, 42, 85, 0.3) !important;
+    }
+    .thursday-btn.cancelled button {
+        background-color: #8C857B !important;
+        box-shadow: none !important;
+    }
+
+    /* Wochenend-Spalten sauber grau hinterlegt */
+    .cal-cell {
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: #383533;
+    }
+    .cal-cell.weekend {
+        background-color: #F2EFE9;
+    }
+    .cal-cell.empty {
+        opacity: 0.15;
     }
 
     .cal-header-cell {
         font-weight: 700;
-        font-size: 0.95rem;
-        padding: 10px 0;
-        color: #4a4744;
+        font-size: 0.9rem;
+        padding: 8px 0;
+        text-align: center;
+        color: #5C5650;
     }
     .cal-header-cell.weekend {
-        background-color: #e5e0d8;
-        color: #383533;
+        background-color: #F2EFE9;
     }
 
-    .cal-day-cell {
-        padding: 10px 0;
-        font-size: 0.95rem;
-        font-weight: 500;
-        color: #2c2a29;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 44px;
-    }
-    .cal-day-cell.weekend {
-        background-color: #e5e0d8;
-        color: #6e6963;
-    }
-    .cal-day-cell.empty {
-        opacity: 0.15;
-    }
-
-    /* Streamlit PfeilbuttonsStyling */
-    div[data-testid="stHorizontalBlock"] div.stButton > button {
-        border-radius: 8px !important;
-        background-color: #ff2a55 !important;
-        color: white !important;
-        border: none !important;
-        font-weight: bold !important;
-        box-shadow: 0 3px 8px rgba(255, 42, 85, 0.3) !important;
-    }
-    div[data-testid="stHorizontalBlock"] div.stButton > button:hover {
-        background-color: #e01f47 !important;
-    }
-
-    /* Donnerstags-Buttons (Pill Style wie auf Bild) */
-    .thursday-btn button {
-        background-color: #ff2a55 !important;
-        color: white !important;
-        border-radius: 10px !important;
-        border: none !important;
-        font-weight: 700 !important;
-        padding: 6px 0 !important;
-        width: 85% !important;
-        margin: 0 auto !important;
-        box-shadow: 0 4px 10px rgba(255, 42, 85, 0.25) !important;
-    }
-    .thursday-btn.cancelled button {
-        background-color: #6e6963 !important;
-        box-shadow: none !important;
-    }
-
-    /* Rollenkarten im Greige Look */
+    /* Rollenkarten */
     .role-container {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 12px;
-        margin-top: 10px;
+        margin-top: 15px;
     }
 
     .role-card {
-        background-color: #efece6;
+        background-color: #FFFFFF;
         border-radius: 14px;
-        padding: 18px 12px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+        padding: 16px 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
         text-align: center;
-        border: 1px solid #e2ddd5;
-        border-top: 4px solid #3b82f6;
+        border: 1px solid #D8D2C9;
+        border-top: 4px solid #3B82F6;
     }
-    .role-card.mod { border-top-color: #ff2a55; }
-    .role-card.proto { border-top-color: #10b981; }
-    .role-card.pause { border-top-color: #f59e0b; }
+    .role-card.mod { border-top-color: #FF2A55; }
+    .role-card.proto { border-top-color: #10B981; }
+    .role-card.pause { border-top-color: #F59E0B; }
     .role-card.cancelled { 
-        border-top-color: #ef4444; 
-        background-color: #fcf0f0; 
-        border: 1px solid #f87171;
+        border-top-color: #EF4444; 
+        background-color: #FDF2F2; 
+        border: 1px solid #FCA5A5;
         grid-column: span 3;
     }
 
     .role-title {
-        font-size: 0.8rem;
+        font-size: 0.75rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        color: #78726a;
-        margin-bottom: 6px;
+        color: #78726A;
+        margin-bottom: 4px;
     }
     .role-person {
-        font-size: 1.35rem;
+        font-size: 1.3rem;
         font-weight: 700;
-        color: #1f1e1d;
-    }
-
-    /* Formularelemente in hellen Farben */
-    div[data-baseweb="select"] > div, div[data-baseweb="input"] > div {
-        background-color: #ffffff !important;
-        color: #2c2a29 !important;
-        border-color: #d6d0c4 !important;
-        border-radius: 8px !important;
+        color: #1F1E1D;
     }
 
     @media (max-width: 640px) {
@@ -285,7 +264,7 @@ st.markdown(
 )
 
 # ---------------------------------------------------------
-# Monats- & Jahres-Navigation über Pfeiltasten
+# Session State Management
 # ---------------------------------------------------------
 heute = date.today()
 
@@ -317,8 +296,13 @@ monate_namen = [
     "Dezember",
 ]
 
-# Monatsanzeige und Buttons wie im Referenzbild
-col_title, col_prev, col_next = st.columns([6, 1, 1])
+# ---------------------------------------------------------
+# Kalender UI
+# ---------------------------------------------------------
+st.markdown("<div class='cal-card-wrapper'>", unsafe_allow_html=True)
+
+# Monatszeile & Pfeiltasten
+col_title, col_prev, col_next = st.columns([5, 1, 1])
 
 with col_title:
     st.markdown(
@@ -333,6 +317,10 @@ with col_prev:
             st.session_state["current_year"] -= 1
         else:
             st.session_state["current_month"] -= 1
+        st.session_state["selected_date"] = (
+            None  # Datum beim Monatswechsel zurücksetzen
+        )
+        st.session_state["edit_mode"] = False
         st.rerun()
 
 with col_next:
@@ -342,15 +330,11 @@ with col_next:
             st.session_state["current_year"] += 1
         else:
             st.session_state["current_month"] += 1
+        st.session_state["selected_date"] = (
+            None  # Datum beim Monatswechsel zurücksetzen
+        )
+        st.session_state["edit_mode"] = False
         st.rerun()
-
-# ---------------------------------------------------------
-# Nahtloses Kalender-Grid (Wochenende rechts leicht grau)
-# ---------------------------------------------------------
-cal = calendar.Calendar(firstweekday=0)
-monats_tage = cal.monthdatescalendar(
-    st.session_state["current_year"], st.session_state["current_month"]
-)
 
 # Wochentage Header
 cols_header = st.columns(7)
@@ -364,6 +348,11 @@ for i, col in enumerate(cols_header):
     )
 
 # Tage durchgehen
+cal = calendar.Calendar(firstweekday=0)
+monats_tage = cal.monthdatescalendar(
+    st.session_state["current_year"], st.session_state["current_month"]
+)
+
 for woche in monats_tage:
     cols = st.columns(7)
     for i, tag in enumerate(woche):
@@ -373,7 +362,7 @@ for woche in monats_tage:
 
             if tag.month != st.session_state["current_month"]:
                 st.markdown(
-                    f"<div class='cal-day-cell empty {weekend_class}'>•</div>",
+                    f"<div class='cal-cell empty {weekend_class}'>•</div>",
                     unsafe_allow_html=True,
                 )
                 continue
@@ -384,34 +373,39 @@ for woche in monats_tage:
             if ist_donnerstag and tag >= START_DATUM:
                 rot = berechne_rotation_fuer_datum(tag, daten)
                 btn_class = "cancelled" if rot["ausfall"] else ""
-                btn_label = f"{tag.day}"
 
                 st.markdown(
-                    f"<div class='thursday-btn {btn_class}'>",
+                    f"<div class='cal-cell thursday-btn {btn_class} {weekend_class}'>",
                     unsafe_allow_html=True,
                 )
-                if st.button(btn_label, key=f"btn_{tag_str}"):
+                if st.button(f"{tag.day}", key=f"btn_{tag_str}"):
                     st.session_state["selected_date"] = tag
                     st.session_state["edit_mode"] = False
                     st.rerun()
                 st.markdown("</div>", unsafe_allow_html=True)
             else:
                 st.markdown(
-                    f"<div class='cal-day-cell {weekend_class}'>{tag.day}</div>",
+                    f"<div class='cal-cell {weekend_class}'>{tag.day}</div>",
                     unsafe_allow_html=True,
                 )
 
-st.divider()
+st.markdown("</div>", unsafe_allow_html=True)  # Ende Card-Wrapper
 
 # ---------------------------------------------------------
-# Rollenanzeige & Details zum gewählten Tag
+# Rollenanzeige (ERST WENN EIN DATUM GEWÄHLT WURDE)
 # ---------------------------------------------------------
 sel_tag = st.session_state.get("selected_date")
 
-if sel_tag:
+# Sicherheitsprüfung: Nur anzeigen, wenn das gewählte Datum auch im aktuell angezeigten Monat liegt
+if (
+    sel_tag
+    and sel_tag.month == st.session_state["current_month"]
+    and sel_tag.year == st.session_state["current_year"]
+):
     sel_str = sel_tag.isoformat()
     rot_info = berechne_rotation_fuer_datum(sel_tag, daten)
 
+    st.markdown("<br>", unsafe_allow_html=True)
     head_col1, head_col2 = st.columns([3, 1])
     with head_col1:
         st.markdown(
@@ -483,9 +477,6 @@ if sel_tag:
 
                     speichere_daten(daten)
                     st.session_state["edit_mode"] = False
-                    st.success(
-                        "Erfolgreich gespeichert! Alle nachfolgenden Tage passen sich an."
-                    )
                     st.rerun()
 
     # --- ANZEIGE-MODUS ---
@@ -495,9 +486,9 @@ if sel_tag:
                 """
                 <div class='role-container'>
                     <div class='role-card cancelled'>
-                        <div class='role-title' style='color: #ef4444;'>Meeting Status</div>
-                        <div class='role-person' style='color: #dc2626;'>❌ Abgesagt / Ausfall</div>
-                        <p style='color: #78726a; margin-top: 8px; font-size: 0.85rem;'>
+                        <div class='role-title' style='color: #EF4444;'>Meeting Status</div>
+                        <div class='role-person' style='color: #DC2626;'>❌ Abgesagt / Ausfall</div>
+                        <p style='color: #78726A; margin-top: 8px; font-size: 0.85rem;'>
                             Die Rotation wird für die darauffolgende Woche fortgesetzt.
                         </p>
                     </div>
@@ -525,8 +516,3 @@ if sel_tag:
                 """,
                 unsafe_allow_html=True,
             )
-
-else:
-    st.info(
-        "👈 Klicken Sie auf einen rot markierten Donnerstag im Kalender, um die Rollenverteilung anzuzeigen."
-    )
