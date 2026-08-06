@@ -105,7 +105,7 @@ def berechne_rotation_fuer_datum(ziel_datum: date, daten: dict):
 
 
 # ---------------------------------------------------------
-# Page Setup & CSS
+# Page Setup & Base CSS
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="NXP ServiceMGMT Meeting Rotation",
@@ -123,7 +123,7 @@ st.markdown(
     }
 
     .main .block-container {
-        max-width: 700px !important;
+        max-width: 680px !important;
         padding-top: 2rem !important;
     }
 
@@ -132,125 +132,131 @@ st.markdown(
         color: #FFFFFF;
         font-weight: 800;
         font-size: 1.8rem;
-        margin-bottom: 12px;
-        white-space: nowrap;
+        margin-bottom: 20px;
     }
 
-    .month-header {
+    /* KALENDER CARD WRAPPER - Garantiert stabiles Grid */
+    .calendar-card {
+        background-color: #1C1B1A;
+        border: 1px solid #3A3836;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    /* Monatsanzeige & Pfeile im Header */
+    .cal-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+
+    .month-header-text {
         font-size: 1.35rem;
         font-weight: 700;
         color: #FFFFFF;
     }
 
-    /* Rote Navigations-Pfeile oben rechts */
-    div[data-testid="stHorizontalBlock"]:first-of-type div.stButton > button {
-        border-radius: 8px !important;
-        background-color: #D9383A !important;
+    .nav-btn-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        background-color: #D9383A;
         color: #FFFFFF !important;
-        border: none !important;
-        font-weight: bold !important;
-        height: 36px !important;
-        width: 36px !important;
-        padding: 0 !important;
+        text-decoration: none !important;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 1.1rem;
+        transition: background-color 0.2s;
+    }
+
+    .nav-btn-link:hover {
+        background-color: #B52B2D;
+    }
+
+    /* Grid Layout für Tage */
+    .cal-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 8px;
+        text-align: center;
+    }
+
+    .day-name {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #B0B0B0;
+        padding-bottom: 8px;
+    }
+
+    /* Tage Styling */
+    .cal-day {
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        font-weight: 600;
+        border-radius: 8px;
+        color: #FFFFFF;
+    }
+
+    .cal-day.weekend {
+        background-color: #2A2928;
+    }
+
+    /* Donnerstags-Klickbare Links */
+    a.thursday-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 42px;
+        background-color: #D9383A;
+        color: #FFFFFF !important;
+        text-decoration: none !important;
+        font-weight: 700;
+        border-radius: 8px;
+        box-shadow: 0 3px 8px rgba(217, 56, 58, 0.3);
+        transition: transform 0.1s, background-color 0.2s;
+    }
+
+    a.thursday-btn:hover {
+        background-color: #B52B2D;
+        transform: translateY(-1px);
+    }
+
+    a.thursday-btn.selected {
+        outline: 2px solid #FFFFFF;
+    }
+
+    a.thursday-btn.cancelled {
+        background-color: #55514E !important;
+        box-shadow: none !important;
     }
 
     /* Trennstriche */
     .cal-divider {
         border-bottom: 1px solid #3A3836;
-        margin: 14px 0 16px 0;
+        margin: 20px 0;
     }
 
-    /* FIX FÜR STREAMLIT SPALTEN-ALIGNMENT */
-    [data-testid="column"] {
-        padding: 0 3px !important;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    .day-header {
-        font-size: 1.15rem;
-        font-weight: 700;
-        color: #E0E0E0;
-        text-align: center;
-        margin-bottom: 6px;
-        width: 100%;
-    }
-
-    /* Normale Tageskästchen */
-    .day-cell {
-        width: 100%;
-        height: 44px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.05rem;
-        font-weight: 600;
-        color: #FFFFFF;
-        border-radius: 8px;
-        box-sizing: border-box;
-    }
-
-    .day-cell.weekend {
-        background-color: #333230;
-    }
-
-    /* ISOLIERTER STYLING-CONTAINER FÜR DONNERSTAGE (NUR HIER ROT) */
-    .do-btn-container {
-        width: 100%;
-    }
-
-    .do-btn-container div.stButton {
-        width: 100% !important;
-        margin: 0 !important;
-    }
-
-    .do-btn-container div.stButton > button {
-        width: 100% !important;
-        height: 44px !important;
-        background-color: #D9383A !important;
-        color: #FFFFFF !important;
-        border: none !important;
-        border-radius: 8px !important;
-        font-size: 1.05rem !important;
-        font-weight: 700 !important;
-        padding: 0 !important;
-        box-shadow: 0 3px 8px rgba(217, 56, 58, 0.3) !important;
-    }
-
-    .do-btn-container div.stButton > button:hover {
-        background-color: #B52B2D !important;
-    }
-
-    /* Button für abgesagte Meetings */
-    .do-btn-container.cancelled div.stButton > button {
-        background-color: #55514E !important;
-        box-shadow: none !important;
-    }
-
-    /* BEARBEITEN-LINK (Kein Button-Kasten, schlichter Text-Link) */
-    .edit-link-container {
-        display: flex;
-        justify-content: flex-end;
-    }
-
-    .edit-link-container div.stButton > button {
-        background-color: transparent !important;
-        border: none !important;
+    /* ELEGANTER BEARBEITEN-LINK */
+    .edit-action-link {
         color: #4A90E2 !important;
         text-decoration: underline !important;
-        font-size: 0.95rem !important;
-        font-weight: 600 !important;
-        padding: 4px 8px !important;
-        box-shadow: none !important;
-        height: auto !important;
-        width: auto !important;
-        cursor: pointer !important;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        background: none;
+        border: none;
+        padding: 0;
     }
 
-    .edit-link-container div.stButton > button:hover {
+    .edit-action-link:hover {
         color: #6BA4E8 !important;
-        background-color: transparent !important;
     }
 
     /* Rollenkarten */
@@ -258,9 +264,6 @@ st.markdown(
         font-size: 1.25rem;
         font-weight: 700;
         color: #FFFFFF;
-        display: flex;
-        align-items: center;
-        gap: 8px;
     }
 
     .role-container {
@@ -302,28 +305,23 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# App-Titel
-st.markdown(
-    "<h1 class='header-title'>NXP ServiceMGMT Meeting Rotation</h1>",
-    unsafe_allow_html=True,
-)
-st.markdown("<div class='cal-divider'></div>", unsafe_allow_html=True)
-
 # ---------------------------------------------------------
-# State Handling
+# State & Query Parameters (URL Handler für Klicks)
 # ---------------------------------------------------------
+params = st.query_params
 heute = date.today()
 
-if "current_year" not in st.session_state:
-    st.session_state["current_year"] = (
-        2026 if heute.year < 2026 else heute.year
-    )
-if "current_month" not in st.session_state:
-    st.session_state["current_month"] = (
-        8 if heute.year == 2026 else heute.month
-    )
-if "selected_date" not in st.session_state:
-    st.session_state["selected_date"] = date(2026, 8, 6)
+# Monat / Jahr aus Parametern oder Fallback
+current_year = int(params.get("year", 2026 if heute.year < 2026 else heute.year))
+current_month = int(params.get("month", 8 if heute.year == 2026 else heute.month))
+
+# Datumsauswahl
+selected_date_str = params.get("selected_date", "2026-08-06")
+try:
+    selected_date = date.fromisoformat(selected_date_str)
+except Exception:
+    selected_date = date(2026, 8, 6)
+
 if "edit_mode" not in st.session_state:
     st.session_state["edit_mode"] = False
 
@@ -343,124 +341,108 @@ monate_namen = [
 ]
 
 # ---------------------------------------------------------
-# Navigation (Monat / Jahr)
+# App-Titel
 # ---------------------------------------------------------
-col_title, col_prev, col_next = st.columns([6, 1, 1])
-
-with col_title:
-    st.markdown(
-        f"<div class='month-header'>{monate_namen[st.session_state['current_month'] - 1]} {st.session_state['current_year']}</div>",
-        unsafe_allow_html=True,
-    )
-
-with col_prev:
-    if st.button("❮", key="prev_month"):
-        if st.session_state["current_month"] == 1:
-            st.session_state["current_month"] = 12
-            st.session_state["current_year"] -= 1
-        else:
-            st.session_state["current_month"] -= 1
-        st.session_state["selected_date"] = None
-        st.session_state["edit_mode"] = False
-        st.rerun()
-
-with col_next:
-    if st.button("❯", key="next_month"):
-        if st.session_state["current_month"] == 12:
-            st.session_state["current_month"] = 1
-            st.session_state["current_year"] += 1
-        else:
-            st.session_state["current_month"] += 1
-        st.session_state["selected_date"] = None
-        st.session_state["edit_mode"] = False
-        st.rerun()
-
-# ---------------------------------------------------------
-# KALENDER RENDERN
-# ---------------------------------------------------------
-wochentage_kurz = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
-
-# Wochentage Header
-cols_header = st.columns(7)
-for i, name in enumerate(wochentage_kurz):
-    cols_header[i].markdown(
-        f"<div class='day-header'>{name}</div>", unsafe_allow_html=True
-    )
-
-st.markdown("<div class='cal-divider'></div>", unsafe_allow_html=True)
-
-# Tage rendern
-cal = calendar.Calendar(firstweekday=0)
-monats_tage = cal.monthdatescalendar(
-    st.session_state["current_year"], st.session_state["current_month"]
+st.markdown(
+    "<h1 class='header-title'>NXP ServiceMGMT Meeting Rotation</h1>",
+    unsafe_allow_html=True,
 )
 
+# ---------------------------------------------------------
+# KALENDER RENDERN (In HTML Card für 100% stabiles Grid)
+# ---------------------------------------------------------
+# Naechster & Vorheriger Monat berechnen
+if current_month == 1:
+    prev_m, prev_y = 12, current_year - 1
+else:
+    prev_m, prev_y = current_month - 1, current_year
+
+if current_month == 12:
+    next_m, next_y = 1, current_year + 1
+else:
+    next_m, next_y = current_month + 1, current_year
+
+# Header der Card
+card_html = f"""
+<div class="calendar-card">
+    <div class="cal-header-row">
+        <div class="month-header-text">{monate_namen[current_month - 1]} {current_year}</div>
+        <div>
+            <a href="?month={prev_m}&year={prev_y}&selected_date={selected_date_str}" target="_self" class="nav-btn-link">❮</a>
+            <a href="?month={next_m}&year={next_y}&selected_date={selected_date_str}" target="_self" class="nav-btn-link" style="margin-left: 6px;">❯</a>
+        </div>
+    </div>
+    <div class="cal-grid">
+        <div class="day-name">Mo</div>
+        <div class="day-name">Di</div>
+        <div class="day-name">Mi</div>
+        <div class="day-name">Do</div>
+        <div class="day-name">Fr</div>
+        <div class="day-name">Sa</div>
+        <div class="day-name">So</div>
+"""
+
+# Kalendertage berechnen
+cal = calendar.Calendar(firstweekday=0)
+monats_tage = cal.monthdatescalendar(current_year, current_month)
+
 for woche in monats_tage:
-    cols = st.columns(7)
     for i, tag in enumerate(woche):
-        with cols[i]:
-            if tag.month != st.session_state["current_month"]:
-                st.markdown(
-                    "<div class='day-cell'></div>", unsafe_allow_html=True
-                )
-            elif tag.weekday() == 3 and tag >= START_DATUM:
-                rot = berechne_rotation_fuer_datum(tag, daten)
-                is_cancelled = rot["ausfall"]
+        if tag.month != current_month:
+            card_html += '<div class="cal-day"></div>'
+        elif tag.weekday() == 3 and tag >= START_DATUM:
+            rot = berechne_rotation_fuer_datum(tag, daten)
+            is_cancelled = rot["ausfall"] if rot else False
+            is_sel = tag == selected_date
 
-                btn_class = (
-                    "do-btn-container cancelled"
-                    if is_cancelled
-                    else "do-btn-container"
-                )
+            cls = "thursday-btn"
+            if is_cancelled:
+                cls += " cancelled"
+            if is_sel:
+                cls += " selected"
 
-                # Nur Donnerstage bekommen einen Streamlit-Button, sauber isoliert über div-Klasse
-                st.markdown(f"<div class='{btn_class}'>", unsafe_allow_html=True)
-                if st.button(f"{tag.day}", key=f"do_btn_{tag.isoformat()}"):
-                    st.session_state["selected_date"] = tag
-                    st.session_state["edit_mode"] = False
-                    st.rerun()
-                st.markdown("</div>", unsafe_allow_html=True)
+            link = f"?month={current_month}&year={current_year}&selected_date={tag.isoformat()}"
+            card_html += f'<a href="{link}" target="_self" class="{cls}">{tag.day}</a>'
+        else:
+            weekend_cls = "weekend" if i >= 5 else ""
+            card_html += (
+                f'<div class="cal-day {weekend_cls}">{tag.day}</div>'
+            )
 
-            else:
-                is_weekend = i >= 5
-                weekend_cls = "weekend" if is_weekend else ""
-                st.markdown(
-                    f"<div class='day-cell {weekend_cls}'>{tag.day}</div>",
-                    unsafe_allow_html=True,
-                )
+card_html += """
+    </div>
+</div>
+"""
 
-# Trennlinie unter dem Kalender
+st.markdown(card_html, unsafe_allow_html=True)
+
+# Trennlinie
 st.markdown("<div class='cal-divider'></div>", unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# UNTERER BEREICH: ROLLENANZEIGE & EDITING
+# UNTERER BEREICH: MEETING DETAILS & BEARBEITEN
 # ---------------------------------------------------------
-sel_tag = st.session_state.get("selected_date")
-
-if (
-    sel_tag
-    and sel_tag.month == st.session_state["current_month"]
-    and sel_tag.year == st.session_state["current_year"]
-):
-    sel_str = sel_tag.isoformat()
-    rot_info = berechne_rotation_fuer_datum(sel_tag, daten)
+if selected_date and selected_date.weekday() == 3:
+    rot_info = berechne_rotation_fuer_datum(selected_date, daten)
 
     col_head, col_edit_btn = st.columns([5, 2])
     with col_head:
         st.markdown(
-            f"<div class='meeting-section-header'>👥 Meeting am {sel_tag.strftime('%d.%m.%Y')}</div>",
+            f"<div class='meeting-section-header'>👥 Meeting am {selected_date.strftime('%d.%m.%Y')}</div>",
             unsafe_allow_html=True,
         )
 
     with col_edit_btn:
-        # Sauberer Text-Link ohne roten Button-Kasten
-        st.markdown("<div class='edit-link-container'>", unsafe_allow_html=True)
-        if st.button("Bearbeiten", key="edit_link_btn"):
+        # Schlichter Textlink ohne roten Kasten
+        st.markdown(
+            "<div style='text-align: right;'>", unsafe_allow_html=True
+        )
+        if st.button("Bearbeiten", key="toggle_edit_link"):
             st.session_state["edit_mode"] = not st.session_state["edit_mode"]
             st.rerun()
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # Bearbeitungs-Formular
+    # Bearbeiten-Formular
     if st.session_state["edit_mode"]:
         st.info("🛠️ **Anpassung für diesen Tag**")
         with st.form("edit_form"):
@@ -501,6 +483,7 @@ if (
                 if len(set(ausgewaehlt)) < 3 and not ist_ausfall_chk:
                     st.error("⚠️ Bitte wähle drei unterschiedliche Personen!")
                 else:
+                    sel_str = selected_date.isoformat()
                     if ist_ausfall_chk:
                         if sel_str not in daten["ausfaelle"]:
                             daten["ausfaelle"].append(sel_str)
