@@ -106,62 +106,103 @@ def berechne_rotation_fuer_datum(ziel_datum: date, daten: dict):
 
 
 # ---------------------------------------------------------
-# Page Setup & Custom CSS Styling
+# Page Setup & Modern Grey Dark CSS
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="Patho ServiceMGMT Rotation", page_icon="📅", layout="centered"
 )
 
-# Erweitertes CSS für graue Wochenenden und hübsche Rollen-Karten
 st.markdown(
     """
 <style>
+    /* Haupt-Hintergrund im Modern Dark Grey Style */
     .stApp {
-        background-color: #f8f9fa;
+        background-color: #121417;
+        color: #e2e8f0;
     }
+    
+    /* Einzeilige, gut lesbare Überschrift */
     .header-title {
         text-align: center;
-        color: #1e293b;
+        color: #f8fafc;
         font-weight: 700;
-        margin-bottom: 20px;
+        font-size: 1.8rem;
+        white-space: nowrap;
+        margin-top: -10px;
+        margin-bottom: 25px;
+        letter-spacing: -0.5px;
     }
+    
+    /* Rollenkarten */
     .role-card {
-        background-color: #ffffff;
+        background-color: #1e2228;
         border-radius: 12px;
-        padding: 20px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        padding: 18px 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         text-align: center;
-        border-top: 5px solid #3b82f6;
+        border: 1px solid #2d333b;
+        border-top: 4px solid #3b82f6;
     }
-    .role-card.mod { border-top-color: #3b82f6; }
-    .role-card.proto { border-top-color: #10b981; }
-    .role-card.pause { border-top-color: #f59e0b; }
-    .role-card.cancelled { border-top-color: #ef4444; background-color: #fef2f2; }
+    .role-card.mod { border-top-color: #60a5fa; }
+    .role-card.proto { border-top-color: #34d399; }
+    .role-card.pause { border-top-color: #fbbf24; }
+    .role-card.cancelled { 
+        border-top-color: #f87171; 
+        background-color: #261a1a; 
+        border: 1px solid #451a1a;
+    }
     
     .role-title {
-        font-size: 0.90rem;
+        font-size: 0.85rem;
         font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: #64748b;
-        margin-bottom: 8px;
+        letter-spacing: 0.08em;
+        color: #94a3b8;
+        margin-bottom: 6px;
     }
     .role-person {
-        font-size: 1.5rem;
+        font-size: 1.4rem;
         font-weight: 700;
-        color: #0f172a;
+        color: #f1f5f9;
     }
+    
+    /* Kalenderzellen */
     .weekend-cell {
-        background-color: #f1f5f9;
+        background-color: #1a1d24;
         border-radius: 6px;
         padding: 8px 0;
         text-align: center;
-        color: #94a3b8;
+        color: #475569;
+        font-weight: 500;
     }
     .weekday-cell {
         text-align: center;
         padding: 8px 0;
-        color: #475569;
+        color: #94a3b8;
+    }
+    .header-day {
+        text-align: center;
+        color: #cbd5e1;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+    .header-weekend {
+        text-align: center;
+        color: #64748b;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    /* Anpassungen für Streamlit-Inputs & Widgets */
+    div[data-baseweb="select"] > div {
+        background-color: #1e2228 !important;
+        color: #f8fafc !important;
+        border-color: #2d333b !important;
+    }
+    div[data-baseweb="input"] > div {
+        background-color: #1e2228 !important;
+        color: #f8fafc !important;
+        border-color: #2d333b !important;
     }
 </style>
 """,
@@ -230,10 +271,9 @@ st.markdown(
 cols_header = st.columns(7)
 wochentage_kurz = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
 for i, col in enumerate(cols_header):
-    # Wochenenden in Kopfzeile auch leicht färben
-    color = "#94a3b8" if i >= 5 else "#1e293b"
+    css_class = "header-weekend" if i >= 5 else "header-day"
     col.markdown(
-        f"<div style='text-align: center; color: {color}; font-weight: bold;'>{wochentage_kurz[i]}</div>",
+        f"<div class='{css_class}'>{wochentage_kurz[i]}</div>",
         unsafe_allow_html=True,
     )
 
@@ -244,7 +284,7 @@ for woche in monats_tage:
         with cols[i]:
             if tag.month != ausgewaehlter_monat_idx:
                 st.markdown(
-                    "<div class='weekday-cell' style='opacity: 0.2;'>•</div>",
+                    "<div class='weekday-cell' style='opacity: 0.15;'>•</div>",
                     unsafe_allow_html=True,
                 )
                 continue
@@ -268,13 +308,11 @@ for woche in monats_tage:
                     st.session_state["edit_mode"] = False
                     st.rerun()
             elif ist_wochenende:
-                # Leicht graues Wochenende
                 st.markdown(
                     f"<div class='weekend-cell'>{tag.day}</div>",
                     unsafe_allow_html=True,
                 )
             else:
-                # Regulärer Wochentag
                 st.markdown(
                     f"<div class='weekday-cell'>{tag.day}</div>",
                     unsafe_allow_html=True,
@@ -347,15 +385,15 @@ if sel_tag:
                 st.success("Erfolgreich gespeichert!")
                 st.rerun()
 
-    # --- ANZEIGE-MODUS (Farbige Kacheln) ---
+    # --- ANZEIGE-MODUS (Farbige Kacheln im Dark Look) ---
     else:
         if rot_info["ausfall"]:
             st.markdown(
                 """
                 <div class='role-card cancelled'>
-                    <div class='role-title' style='color: #ef4444;'>Meeting Status</div>
-                    <div class='role-person' style='color: #dc2626;'>❌ Abgesagt / Ausfall</div>
-                    <p style='color: #7f1d1d; margin-top: 8px; font-size: 0.9rem;'>
+                    <div class='role-title' style='color: #f87171;'>Meeting Status</div>
+                    <div class='role-person' style='color: #fca5a5;'>❌ Abgesagt / Ausfall</div>
+                    <p style='color: #cbd5e1; margin-top: 8px; font-size: 0.85rem;'>
                         Die Rotation wird für die darauffolgende Woche fortgesetzt.
                     </p>
                 </div>
