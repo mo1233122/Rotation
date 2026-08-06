@@ -554,7 +554,7 @@ st.markdown(
 <div class="info-card">
     <div class="info-card-title">ℹ️ Funktionsweise & Rotation</div>
     <ul class="info-card-list">
-        <li><b>Automatische Rotation:</b> Die Rollen (Moderator*in, Protokollant*in, Pause) rotieren jeden Donnerstag automatisch unter Moritz, Lissi und Veronika.</li>
+        <li><b>Automatische Rotation:</b> Die Rollen (Moderator*in, Protokollant*in, Pause) rotieren jeden Donnerstag automatisch unter Lissi, Veronika und Moritz.</li>
         <li><b>Manuelle Anpassung:</b> Über <u>Bearbeiten</u> lassen sich Rollen für ein gewähltes Datum individuell festlegen. Nachfolgende Donnerstage passen sich automatisch an.</li>
         <li><b>Ausfälle:</b> Fällt ein Meeting aus, pausiert der Turnus für diese Woche und wird am nächsten Donnerstag nahtlos fortgesetzt.</li>
     </ul>
