@@ -105,7 +105,7 @@ def berechne_rotation_fuer_datum(ziel_datum: date, daten: dict):
 
 
 # ---------------------------------------------------------
-# Page Setup & Uniform Layout CSS
+# Page Setup & CSS (Edles Layout & Perfektes Raster)
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="NXP ServiceMGMT Meeting Rotation",
@@ -127,6 +127,7 @@ st.markdown(
         padding-top: 2rem !important;
     }
 
+    /* Überschrift */
     .header-title {
         color: #FFFFFF;
         font-weight: 800;
@@ -134,14 +135,20 @@ st.markdown(
         margin-bottom: 20px;
     }
 
-    /* KALENDER CARD CONTAINER */
-    .cal-card-box {
+    /* KALENDER CARD WRAPPER - Bombenfestes 7-Spalten Grid */
+    .calendar-card {
         background-color: #1C1B1A;
         border: 1px solid #3A3836;
         border-radius: 12px;
         padding: 20px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        margin-bottom: 25px;
+    }
+
+    .cal-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
     }
 
     .month-header-text {
@@ -150,129 +157,119 @@ st.markdown(
         color: #FFFFFF;
     }
 
-    /* Pfeil-Buttons oben rechts */
-    div[data-testid="column"]:has(button[key="prev_month"]),
-    div[data-testid="column"]:has(button[key="next_month"]) {
-        display: flex;
-        justify-content: flex-end;
-    }
-
-    button[key="prev_month"], button[key="next_month"] {
-        border-radius: 8px !important;
-        background-color: #D9383A !important;
+    .nav-btn-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        background-color: #D9383A;
         color: #FFFFFF !important;
-        border: none !important;
-        font-weight: bold !important;
-        height: 36px !important;
-        width: 36px !important;
-        padding: 0 !important;
+        text-decoration: none !important;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 1.1rem;
+        transition: background-color 0.2s;
     }
 
-    /* UNIFORMES SPALTENGRID */
-    div[data-testid="column"] {
-        padding: 0 3px !important;
+    .nav-btn-link:hover {
+        background-color: #B52B2D;
     }
 
-    .day-header {
-        font-size: 1.15rem;
-        font-weight: 700;
-        color: #E0E0E0;
+    /* Direct HTML Grid */
+    .cal-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 8px;
         text-align: center;
-        margin-bottom: 12px;
     }
 
-    /* ALLGEMEINES STYLING FÜR ALLE TAGE-BUTTONS */
-    .day-wrapper div.stButton > button {
-        width: 100% !important;
-        height: 44px !important;
-        border-radius: 8px !important;
-        font-size: 1.05rem !important;
-        font-weight: 600 !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
+    .day-name {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #B0B0B0;
+        padding-bottom: 8px;
     }
 
-    /* Normale Tage (Klickunfähig / Text-Optik) */
-    .day-wrapper.normal div.stButton > button {
-        background-color: transparent !important;
-        border: none !important;
+    .cal-day {
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        font-weight: 600;
+        border-radius: 8px;
+        color: #FFFFFF;
+    }
+
+    .cal-day.weekend {
+        background-color: #2A2928;
+    }
+
+    /* Rote Donnerstage */
+    a.thursday-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 42px;
+        background-color: #D9383A;
         color: #FFFFFF !important;
-        cursor: default !important;
-        box-shadow: none !important;
+        text-decoration: none !important;
+        font-weight: 700;
+        border-radius: 8px;
+        box-shadow: 0 3px 8px rgba(217, 56, 58, 0.3);
+        transition: transform 0.1s, background-color 0.2s;
     }
 
-    /* Wochenend-Tage */
-    .day-wrapper.weekend div.stButton > button {
-        background-color: #2D2C2B !important;
-        border: none !important;
-        color: #FFFFFF !important;
-        cursor: default !important;
-        box-shadow: none !important;
+    a.thursday-btn:hover {
+        background-color: #B52B2D;
+        transform: translateY(-1px);
     }
 
-    /* Rote Donnerstage (Interaktiv) */
-    .day-wrapper.thursday div.stButton > button {
-        background-color: #D9383A !important;
-        color: #FFFFFF !important;
-        border: none !important;
-        font-weight: 700 !important;
-        box-shadow: 0 3px 8px rgba(217, 56, 58, 0.3) !important;
-        cursor: pointer !important;
-    }
-
-    .day-wrapper.thursday div.stButton > button:hover {
-        background-color: #B52B2D !important;
-    }
-
-    /* Ausgefallene Donnerstage */
-    .day-wrapper.thursday-cancelled div.stButton > button {
+    a.thursday-btn.cancelled {
         background-color: #55514E !important;
-        color: #FFFFFF !important;
-        border: none !important;
-        font-weight: 700 !important;
-        cursor: pointer !important;
+        box-shadow: none !important;
     }
 
-    /* Leere Tage */
-    .day-wrapper.empty div.stButton > button {
-        background-color: transparent !important;
-        border: none !important;
-        visibility: hidden !important;
+    .cal-divider {
+        border-bottom: 1px solid #3A3836;
+        margin: 20px 0;
     }
 
-    /* UNTERER BEREICH LAYOUT */
-    .meeting-header-container {
+    /* LOWER SECTION: BÜNDIGER BEARBEITEN BUTTON */
+    .meeting-header-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 15px;
     }
 
-    .meeting-title {
+    .meeting-section-header {
         font-size: 1.25rem;
         font-weight: 700;
         color: #FFFFFF;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
 
-    /* BEARBEITEN BUTTON: Perfekt rechtsbündig */
-    .edit-btn-box div.stButton > button {
-        background-color: #1E1E1D !important;
-        color: #FFFFFF !important;
-        border: 1px solid #3A3836 !important;
-        border-radius: 6px !important;
-        padding: 6px 14px !important;
-        font-size: 0.85rem !important;
+    /* Schlichter, dezenter Bearbeiten-Link/Button */
+    .bearbeiten-link-btn div.stButton > button {
+        background-color: transparent !important;
+        color: #4A90E2 !important;
+        border: none !important;
+        text-decoration: underline !important;
+        font-size: 0.95rem !important;
         font-weight: 600 !important;
-        height: 34px !important;
+        padding: 0 !important;
         box-shadow: none !important;
+        height: auto !important;
+        cursor: pointer !important;
     }
 
-    .edit-btn-box div.stButton > button:hover {
-        border-color: #FFFFFF !important;
-        background-color: rgba(255, 255, 255, 0.05) !important;
+    .bearbeiten-link-btn div.stButton > button:hover {
+        color: #6BA4E8 !important;
+        background-color: transparent !important;
     }
 
     /* Rollenkarten */
@@ -314,166 +311,117 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# App-Titel
+# ---------------------------------------------------------
+# State & URL Parameters
+# ---------------------------------------------------------
+params = st.query_params
+heute = date.today()
+
+current_year = int(params.get("year", 2026 if heute.year < 2026 else heute.year))
+current_month = int(params.get("month", 8 if heute.year == 2026 else heute.month))
+
+selected_date_str = params.get("selected_date", "2026-08-06")
+try:
+    selected_date = date.fromisoformat(selected_date_str)
+except Exception:
+    selected_date = date(2026, 8, 6)
+
+if "edit_mode" not in st.session_state:
+    st.session_state["edit_mode"] = False
+
+monate_namen = [
+    "Januar", "Februar", "März", "April", "Mai", "Juni",
+    "Juli", "August", "September", "Oktober", "November", "Dezember"
+]
+
+# Title
 st.markdown(
     "<h1 class='header-title'>NXP ServiceMGMT Meeting Rotation</h1>",
     unsafe_allow_html=True,
 )
 
 # ---------------------------------------------------------
-# State Handling
+# KALENDER CARD (Perfekt gerendert)
 # ---------------------------------------------------------
-heute = date.today()
+if current_month == 1:
+    prev_m, prev_y = 12, current_year - 1
+else:
+    prev_m, prev_y = current_month - 1, current_year
 
-if "current_year" not in st.session_state:
-    st.session_state["current_year"] = (
-        2026 if heute.year < 2026 else heute.year
-    )
-if "current_month" not in st.session_state:
-    st.session_state["current_month"] = (
-        8 if heute.year == 2026 else heute.month
-    )
-if "selected_date" not in st.session_state:
-    st.session_state["selected_date"] = date(2026, 8, 6)
-if "edit_mode" not in st.session_state:
-    st.session_state["edit_mode"] = False
+if current_month == 12:
+    next_m, next_y = 1, current_year + 1
+else:
+    next_m, next_y = current_month + 1, current_year
 
-monate_namen = [
-    "Januar",
-    "Februar",
-    "März",
-    "April",
-    "Mai",
-    "Juni",
-    "Juli",
-    "August",
-    "September",
-    "Oktober",
-    "November",
-    "Dezember",
-]
+card_html = f"""
+<div class="calendar-card">
+    <div class="cal-header-row">
+        <div class="month-header-text">{monate_namen[current_month - 1]} {current_year}</div>
+        <div>
+            <a href="?month={prev_m}&year={prev_y}&selected_date={selected_date_str}" target="_self" class="nav-btn-link">❮</a>
+            <a href="?month={next_m}&year={next_y}&selected_date={selected_date_str}" target="_self" class="nav-btn-link" style="margin-left: 6px;">❯</a>
+        </div>
+    </div>
+    <div class="cal-grid">
+        <div class="day-name">Mo</div>
+        <div class="day-name">Di</div>
+        <div class="day-name">Mi</div>
+        <div class="day-name">Do</div>
+        <div class="day-name">Fr</div>
+        <div class="day-name">Sa</div>
+        <div class="day-name">So</div>
+"""
 
-# ---------------------------------------------------------
-# KALENDER-BLOCK (ALLES IN EINER CARD)
-# ---------------------------------------------------------
-st.markdown("<div class='cal-card-box'>", unsafe_allow_html=True)
-
-# Navigation oben
-col_title, col_prev, col_next = st.columns([6, 1, 1])
-
-with col_title:
-    st.markdown(
-        f"<div class='month-header-text'>{monate_namen[st.session_state['current_month'] - 1]} {st.session_state['current_year']}</div>",
-        unsafe_allow_html=True,
-    )
-
-with col_prev:
-    if st.button("❮", key="prev_month"):
-        if st.session_state["current_month"] == 1:
-            st.session_state["current_month"] = 12
-            st.session_state["current_year"] -= 1
-        else:
-            st.session_state["current_month"] -= 1
-        st.session_state["selected_date"] = None
-        st.session_state["edit_mode"] = False
-
-with col_next:
-    if st.button("❯", key="next_month"):
-        if st.session_state["current_month"] == 12:
-            st.session_state["current_month"] = 1
-            st.session_state["current_year"] += 1
-        else:
-            st.session_state["current_month"] += 1
-        st.session_state["selected_date"] = None
-        st.session_state["edit_mode"] = False
-
-st.markdown(
-    "<div style='margin-bottom: 15px;'></div>", unsafe_allow_html=True
-)
-
-# Wochentage Header
-wochentage_kurz = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
-cols_header = st.columns(7)
-for i, name in enumerate(wochentage_kurz):
-    cols_header[i].markdown(
-        f"<div class='day-header'>{name}</div>", unsafe_allow_html=True
-    )
-
-# Kalender Grid
 cal = calendar.Calendar(firstweekday=0)
-monats_tage = cal.monthdatescalendar(
-    st.session_state["current_year"], st.session_state["current_month"]
-)
+monats_tage = cal.monthdatescalendar(current_year, current_month)
 
 for woche in monats_tage:
-    cols = st.columns(7)
     for i, tag in enumerate(woche):
-        with cols[i]:
-            if tag.month != st.session_state["current_month"]:
-                st.markdown(
-                    "<div class='day-wrapper empty'>", unsafe_allow_html=True
-                )
-                st.button("", key=f"empty_{tag.isoformat()}_{i}")
-                st.markdown("</div>", unsafe_allow_html=True)
+        if tag.month != current_month:
+            card_html += '<div class="cal-day"></div>'
+        elif tag.weekday() == 3 and tag >= START_DATUM:
+            rot = berechne_rotation_fuer_datum(tag, daten)
+            is_cancelled = rot["ausfall"] if rot else False
 
-            elif tag.weekday() == 3 and tag >= START_DATUM:
-                rot = berechne_rotation_fuer_datum(tag, daten)
-                is_cancelled = rot["ausfall"]
-                cls = "thursday-cancelled" if is_cancelled else "thursday"
+            cls = "thursday-btn"
+            if is_cancelled:
+                cls += " cancelled"
 
-                st.markdown(
-                    f"<div class='day-wrapper {cls}'>", unsafe_allow_html=True
-                )
-                if st.button(f"{tag.day}", key=f"btn_{tag.isoformat()}"):
-                    st.session_state["selected_date"] = tag
-                    st.session_state["edit_mode"] = False
-                st.markdown("</div>", unsafe_allow_html=True)
+            link = f"?month={current_month}&year={current_year}&selected_date={tag.isoformat()}"
+            card_html += f'<a href="{link}" target="_self" class="{cls}">{tag.day}</a>'
+        else:
+            weekend_cls = "weekend" if i >= 5 else ""
+            card_html += f'<div class="cal-day {weekend_cls}">{tag.day}</div>'
 
-            else:
-                is_weekend = i >= 5
-                cls = "weekend" if is_weekend else "normal"
+card_html += """
+    </div>
+</div>
+"""
 
-                st.markdown(
-                    f"<div class='day-wrapper {cls}'>", unsafe_allow_html=True
-                )
-                st.button(f"{tag.day}", key=f"disabled_{tag.isoformat()}")
-                st.markdown("</div>", unsafe_allow_html=True)
-
-st.markdown("</div>", unsafe_allow_html=True)  # Ende cal-card-box
+st.markdown(card_html, unsafe_allow_html=True)
+st.markdown("<div class='cal-divider'></div>", unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# UNTERER BEREICH: ROLLENANZEIGE & EDITING
+# MEETING ANZEIGE & BEARBEITEN
 # ---------------------------------------------------------
-sel_tag = st.session_state.get("selected_date")
+if selected_date and selected_date.weekday() == 3:
+    rot_info = berechne_rotation_fuer_datum(selected_date, daten)
 
-if (
-    sel_tag
-    and sel_tag.month == st.session_state["current_month"]
-    and sel_tag.year == st.session_state["current_year"]
-):
-    sel_str = sel_tag.isoformat()
-    rot_info = berechne_rotation_fuer_datum(sel_tag, daten)
-
-    # Ueberschrift und Bearbeiten-Button nebeneinander
-    col_meeting_title, col_meeting_edit = st.columns([5, 2])
-
-    with col_meeting_title:
+    col_head, col_edit_btn = st.columns([5, 2])
+    with col_head:
         st.markdown(
-            f"<div class='meeting-title'>👥 Meeting am {sel_tag.strftime('%d.%m.%Y')}</div>",
+            f"<div class='meeting-section-header'>👥 Meeting am {selected_date.strftime('%d.%m.%Y')}</div>",
             unsafe_allow_html=True,
         )
 
-    with col_meeting_edit:
-        st.markdown("<div class='edit-btn-box'>", unsafe_allow_html=True)
+    with col_edit_btn:
+        st.markdown("<div class='bearbeiten-link-btn' style='text-align: right;'>", unsafe_allow_html=True)
         if st.button("Bearbeiten", key="toggle_edit_mode"):
             st.session_state["edit_mode"] = not st.session_state["edit_mode"]
+            st.rerun()
         st.markdown("</div>", unsafe_allow_html=True)
 
-    st.markdown(
-        "<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True
-    )
-
-    # Bearbeitungs-Formular
+    # Formular
     if st.session_state["edit_mode"]:
         st.info("🛠️ **Anpassung für diesen Tag**")
         with st.form("edit_form"):
@@ -510,6 +458,7 @@ if (
             speichern_btn = st.form_submit_button("Speichern")
 
             if speichern_btn:
+                sel_str = selected_date.isoformat()
                 ausgewaehlt = [mod_wahl, proto_wahl, pause_wahl]
                 if len(set(ausgewaehlt)) < 3 and not ist_ausfall_chk:
                     st.error("⚠️ Bitte wähle drei unterschiedliche Personen!")
@@ -534,7 +483,7 @@ if (
                     st.session_state["edit_mode"] = False
                     st.rerun()
 
-    # Normalansicht der Rollen
+    # Normalansicht der Karten
     else:
         if rot_info["ausfall"]:
             st.markdown(
