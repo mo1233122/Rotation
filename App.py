@@ -7,9 +7,9 @@ import streamlit as st
 # Speicherdatei-Pfad
 DATEI = Path(__file__).with_name("patho_rotation.json")
 
-# Standard-Personen für die Rotation (in fester Reihenfolge)
+# Standard-Personen für die Rotation
 STANDARD_PERSONEN = ["Veronika", "Moritz", "Lissi"]
-START_DATUM = date(2026, 8, 6)  # Erster bekannter Donnerstag
+START_DATUM = date(2026, 8, 6)
 
 
 # ---------------------------------------------------------
@@ -106,7 +106,7 @@ def berechne_rotation_fuer_datum(ziel_datum: date, daten: dict):
 
 
 # ---------------------------------------------------------
-# Page Setup & Modern Grey Dark CSS
+# Page Setup & Responsive Dark CSS
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="Patho ServiceMGMT Rotation", page_icon="📅", layout="centered"
@@ -115,29 +115,35 @@ st.set_page_config(
 st.markdown(
     """
 <style>
-    /* Haupt-Hintergrund im Modern Dark Grey Style */
     .stApp {
         background-color: #121417;
         color: #e2e8f0;
     }
     
-    /* Einzeilige, gut lesbare Überschrift */
+    /* Header Responsive */
     .header-title {
         text-align: center;
         color: #f8fafc;
         font-weight: 700;
-        font-size: 1.8rem;
+        font-size: clamp(1.2rem, 4vw, 1.8rem);
         white-space: nowrap;
         margin-top: -10px;
-        margin-bottom: 25px;
+        margin-bottom: 20px;
         letter-spacing: -0.5px;
     }
     
-    /* Rollenkarten */
+    /* Responsive Grid für Rollenkarten */
+    .role-container {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-top: 10px;
+    }
+
     .role-card {
         background-color: #1e2228;
         border-radius: 12px;
-        padding: 18px 12px;
+        padding: 16px 8px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         text-align: center;
         border: 1px solid #2d333b;
@@ -150,59 +156,73 @@ st.markdown(
         border-top-color: #f87171; 
         background-color: #261a1a; 
         border: 1px solid #451a1a;
+        grid-column: span 3;
     }
     
     .role-title {
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         font-weight: 600;
         text-transform: uppercase;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.05em;
         color: #94a3b8;
-        margin-bottom: 6px;
+        margin-bottom: 4px;
     }
     .role-person {
-        font-size: 1.4rem;
+        font-size: 1.25rem;
         font-weight: 700;
         color: #f1f5f9;
+        word-break: break-word;
     }
-    
-    /* Kalenderzellen */
+
+    /* Kalender-Anpassungen */
     .weekend-cell {
         background-color: #1a1d24;
         border-radius: 6px;
-        padding: 8px 0;
+        padding: 6px 0;
         text-align: center;
         color: #475569;
-        font-weight: 500;
+        font-size: 0.85rem;
     }
     .weekday-cell {
         text-align: center;
-        padding: 8px 0;
+        padding: 6px 0;
         color: #94a3b8;
+        font-size: 0.85rem;
     }
     .header-day {
         text-align: center;
         color: #cbd5e1;
         font-weight: 600;
-        margin-bottom: 8px;
+        font-size: 0.85rem;
+        margin-bottom: 4px;
     }
     .header-weekend {
         text-align: center;
         color: #64748b;
         font-weight: 600;
-        margin-bottom: 8px;
+        font-size: 0.85rem;
+        margin-bottom: 4px;
     }
 
-    /* Anpassungen für Streamlit-Inputs & Widgets */
-    div[data-baseweb="select"] > div {
-        background-color: #1e2228 !important;
-        color: #f8fafc !important;
-        border-color: #2d333b !important;
+    /* Streamlit Buttons für Handys komprimieren */
+    div.stButton > button {
+        padding: 4px 2px !important;
+        font-size: 0.8rem !important;
+        width: 100% !important;
     }
-    div[data-baseweb="input"] > div {
-        background-color: #1e2228 !important;
-        color: #f8fafc !important;
-        border-color: #2d333b !important;
+
+    /* SMARTPHONE BREAKPOINT (< 640px) */
+    @media (max-width: 640px) {
+        .role-container {
+            grid-template-columns: 1fr; /* Kacheln untereinander auf Smartphones */
+        }
+        .role-card.cancelled {
+            grid-column: span 1;
+        }
+        .block-container {
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
+        }
     }
 </style>
 """,
@@ -236,15 +256,21 @@ with col_m:
         "Dezember",
     ]
     ausgewaehlter_monat_idx = st.selectbox(
-        "Monat wählen",
+        "Monat",
         range(1, 13),
         index=7 if heute.year == 2026 else heute.month - 1,
         format_func=lambda x: monate[x - 1],
+        label_visibility="collapsed",
     )
 
 with col_y:
     ausgewaehltes_jahr = st.number_input(
-        "Jahr wählen", min_value=2026, max_value=2035, value=2026, step=1
+        "Jahr",
+        min_value=2026,
+        max_value=2035,
+        value=2026,
+        step=1,
+        label_visibility="collapsed",
     )
 
 st.divider()
@@ -321,7 +347,7 @@ for woche in monats_tage:
 st.divider()
 
 # ---------------------------------------------------------
-# Rollenanzeige & Details zum gewählten Tag
+# Rollenanzeige & Details (Responsive Container)
 # ---------------------------------------------------------
 sel_tag = st.session_state.get("selected_date")
 
@@ -343,7 +369,7 @@ if sel_tag:
         st.info("🛠️ **Anpassung für diesen Tag**")
         with st.form("edit_form"):
             ist_ausfall_chk = st.checkbox(
-                "❌ Meeting fällt aus (Rotation verschiebt sich automatisch)",
+                "❌ Meeting fällt aus (Rotation verschiebt sich)",
                 value=rot_info["ausfall"],
             )
 
@@ -385,56 +411,43 @@ if sel_tag:
                 st.success("Erfolgreich gespeichert!")
                 st.rerun()
 
-    # --- ANZEIGE-MODUS (Farbige Kacheln im Dark Look) ---
+    # --- ANZEIGE-MODUS (Mobil-Optimiertes Grid) ---
     else:
         if rot_info["ausfall"]:
             st.markdown(
                 """
-                <div class='role-card cancelled'>
-                    <div class='role-title' style='color: #f87171;'>Meeting Status</div>
-                    <div class='role-person' style='color: #fca5a5;'>❌ Abgesagt / Ausfall</div>
-                    <p style='color: #cbd5e1; margin-top: 8px; font-size: 0.85rem;'>
-                        Die Rotation wird für die darauffolgende Woche fortgesetzt.
-                    </p>
+                <div class='role-container'>
+                    <div class='role-card cancelled'>
+                        <div class='role-title' style='color: #f87171;'>Meeting Status</div>
+                        <div class='role-person' style='color: #fca5a5;'>❌ Abgesagt / Ausfall</div>
+                        <p style='color: #cbd5e1; margin-top: 8px; font-size: 0.85rem;'>
+                            Die Rotation wird für die darauffolgende Woche fortgesetzt.
+                        </p>
+                    </div>
                 </div>
                 """,
                 unsafe_allow_html=True,
             )
         else:
-            col_a, col_b, col_c = st.columns(3)
-
-            with col_a:
-                st.markdown(
-                    f"""
+            st.markdown(
+                f"""
+                <div class='role-container'>
                     <div class='role-card mod'>
                         <div class='role-title'>🎤 Moderierer</div>
                         <div class='role-person'>{rot_info['mod']}</div>
                     </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
-
-            with col_b:
-                st.markdown(
-                    f"""
                     <div class='role-card proto'>
                         <div class='role-title'>📝 Protokollierer</div>
                         <div class='role-person'>{rot_info['proto']}</div>
                     </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
-
-            with col_c:
-                st.markdown(
-                    f"""
                     <div class='role-card pause'>
                         <div class='role-title'>☕ Pause</div>
                         <div class='role-person'>{rot_info['pause']}</div>
                     </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
 else:
     st.info(
