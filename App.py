@@ -237,6 +237,15 @@ st.markdown(
         margin: 20px 0;
     }
 
+    /* HINWEIS-TEXT WENN KEIN TAG GEWÄHLT */
+    .placeholder-hint {
+        color: #A0A0A0;
+        font-size: 0.95rem;
+        text-align: center;
+        padding: 8px 0;
+        font-weight: 500;
+    }
+
     /* MEETING UNTERZEILE */
     .meeting-section-header {
         font-size: 1.25rem;
@@ -347,14 +356,13 @@ heute = date.today()
 current_year = int(params.get("year", 2026 if heute.year < 2026 else heute.year))
 current_month = int(params.get("month", 8 if heute.year == 2026 else heute.month))
 
-# Datum aus URL parsen (Standard: None -> erst anzeigen wenn geklickt!)
+# Datum aus URL parsen
 selected_date_str = params.get("selected_date", None)
 selected_date = None
 
 if selected_date_str:
     try:
         parsed_date = date.fromisoformat(selected_date_str)
-        # Nur übernehmen, wenn es im aktuellen Monat/Jahr liegt
         if parsed_date.year == current_year and parsed_date.month == current_month:
             selected_date = parsed_date
     except Exception:
@@ -433,13 +441,12 @@ card_html += """
 """
 
 st.markdown(card_html, unsafe_allow_html=True)
+st.markdown("<div class='cal-divider'></div>", unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# MEETING ANZEIGE & BEARBEITEN (WIRD ERST BEIM KLICK DURCHGEFÜHRT)
+# MEETING ANZEIGE / HINWEIS-TEXT
 # ---------------------------------------------------------
 if selected_date and selected_date.weekday() == 3 and selected_date >= START_DATUM:
-    st.markdown("<div class='cal-divider'></div>", unsafe_allow_html=True)
-    
     rot_info = berechne_rotation_fuer_datum(selected_date, daten)
 
     st.markdown(
@@ -551,6 +558,13 @@ if selected_date and selected_date.weekday() == 3 and selected_date >= START_DAT
         st.session_state["edit_mode"] = not st.session_state["edit_mode"]
         st.rerun()
     st.markdown("</div>", unsafe_allow_html=True)
+
+else:
+    # Hinweistext, wenn noch kein Tag ausgewählt wurde
+    st.markdown(
+        "<div class='placeholder-hint'>💡 Wähle einen Donnerstag im Kalender aus, um die Rotation anzuzeigen.</div>",
+        unsafe_allow_html=True,
+    )
 
 # ---------------------------------------------------------
 # ZWEITER TRENNSTRICH & INFO BEREICH
