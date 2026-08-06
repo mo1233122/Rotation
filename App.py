@@ -45,15 +45,6 @@ def alle_donnerstage_bis(ziel_datum: date):
     return donnerstage
 
 
-def erster_donnerstag_des_monats(year: int, month: int) -> date:
-    """Ermittelt den ersten Donnerstag eines Monats (oder START_DATUM, falls davor)."""
-    cal = calendar.Calendar(firstweekday=0)
-    for tag in cal.itermonthdates(year, month):
-        if tag.month == month and tag.weekday() == 3:
-            return max(tag, START_DATUM)
-    return date(year, month, 1)
-
-
 def berechne_rotation_fuer_datum(ziel_datum: date, daten: dict):
     if ziel_datum.weekday() != 3 or ziel_datum < START_DATUM:
         return None
@@ -356,22 +347,18 @@ heute = date.today()
 current_year = int(params.get("year", 2026 if heute.year < 2026 else heute.year))
 current_month = int(params.get("month", 8 if heute.year == 2026 else heute.month))
 
-# Datum aus URL parsen
+# Datum aus URL parsen (Standard: None -> erst anzeigen wenn geklickt!)
 selected_date_str = params.get("selected_date", None)
 selected_date = None
 
 if selected_date_str:
     try:
-        selected_date = date.fromisoformat(selected_date_str)
+        parsed_date = date.fromisoformat(selected_date_str)
+        # Nur übernehmen, wenn es im aktuellen Monat/Jahr liegt
+        if parsed_date.year == current_year and parsed_date.month == current_month:
+            selected_date = parsed_date
     except Exception:
         pass
-
-# Falls das gewählte Datum NICHT zum aktuellen Jahr/Monat passt,
-# springen wir automatisch auf den ersten Donnerstag des neuen Monats!
-if not selected_date or selected_date.year != current_year or selected_date.month != current_month:
-    selected_date = erster_donnerstag_des_monats(current_year, current_month)
-
-selected_date_str = selected_date.isoformat()
 
 if "edit_mode" not in st.session_state:
     st.session_state["edit_mode"] = False
@@ -400,17 +387,13 @@ if current_month == 12:
 else:
     next_m, next_y = current_month + 1, current_year
 
-# Ersten Donnerstag für Vor- und Folgemonat berechnen für nahtlose Navigation
-prev_first_do = erster_donnerstag_des_monats(prev_y, prev_m)
-next_first_do = erster_donnerstag_des_monats(next_y, next_m)
-
 card_html = f"""
 <div class="calendar-card">
     <div class="cal-header-row">
         <div class="month-header-text">{monate_namen[current_month - 1]} {current_year}</div>
         <div>
-            <a href="?month={prev_m}&year={prev_y}&selected_date={prev_first_do.isoformat()}" target="_self" class="nav-btn-link">❮</a>
-            <a href="?month={next_m}&year={next_y}&selected_date={next_first_do.isoformat()}" target="_self" class="nav-btn-link" style="margin-left: 6px;">❯</a>
+            <a href="?month={prev_m}&year={prev_y}" target="_self" class="nav-btn-link">❮</a>
+            <a href="?month={next_m}&year={next_y}" target="_self" class="nav-btn-link" style="margin-left: 6px;">❯</a>
         </div>
     </div>
     <div class="cal-grid">
@@ -450,12 +433,13 @@ card_html += """
 """
 
 st.markdown(card_html, unsafe_allow_html=True)
-st.markdown("<div class='cal-divider'></div>", unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# MEETING ANZEIGE & BEARBEITEN
+# MEETING ANZEIGE & BEARBEITEN (WIRD ERST BEIM KLICK DURCHGEFÜHRT)
 # ---------------------------------------------------------
 if selected_date and selected_date.weekday() == 3 and selected_date >= START_DATUM:
+    st.markdown("<div class='cal-divider'></div>", unsafe_allow_html=True)
+    
     rot_info = berechne_rotation_fuer_datum(selected_date, daten)
 
     st.markdown(
@@ -579,7 +563,7 @@ st.markdown(
     <div class="info-card-title">ℹ️ Funktionsweise & Rotation</div>
     <ul class="info-card-list">
         <li><b>Automatische Rotation:</b> Die Rollen (Moderator*in, Protokollant*in, Pause) rotieren jeden Donnerstag automatisch unter Moritz, Lissi und Veronika.</li>
-        <li><b>Manuelle Anpassung:</b> Über <u>Bearbeiten</u> lassen sich Rollen für ein gewählte Datum individuell festlegen. Nachfolgende Donnerstage passen sich automatisch an.</li>
+        <li><b>Manuelle Anpassung:</b> Über <u>Bearbeiten</u> lassen sich Rollen für ein gewähltes Datum individuell festlegen. Nachfolgende Donnerstage passen sich automatisch an.</li>
         <li><b>Ausfälle:</b> Fällt ein Meeting aus, pausiert der Turnus für diese Woche und wird am nächsten Donnerstag nahtlos fortgesetzt.</li>
     </ul>
 </div>
