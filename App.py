@@ -13,19 +13,18 @@ START_DATUM = date(2026, 8, 6)  # Erster bekannter Donnerstag
 
 
 # ---------------------------------------------------------
-# Hilfsfunktionen für Datenhaltung (Laden / Speichern)
+# Datenhaltung (Laden / Speichern)
 # ---------------------------------------------------------
 def lade_daten():
     if DATEI.exists():
         try:
-            daten = json.loads(DATEI.read_text(encoding="utf-8"))
-            return daten
+            return json.loads(DATEI.read_text(encoding="utf-8"))
         except Exception:
             pass
     return {
         "personen": STANDARD_PERSONEN,
-        "ausfaelle": [],  # Liste von Datums-Strings "YYYY-MM-DD"
-        "manuelle_anpassungen": {},  # "YYYY-MM-DD": {"mod": ..., "proto": ..., "pause": ...}
+        "ausfaelle": [],
+        "manuelle_anpassungen": {},
     }
 
 
@@ -35,15 +34,13 @@ def speichere_daten(daten):
     )
 
 
-# Daten laden
 daten = lade_daten()
 
 
 # ---------------------------------------------------------
-# Rotations-Engine
+# Rotations-Logik
 # ---------------------------------------------------------
 def alle_donnerstage_bis(ziel_datum: date):
-    """Generiert alle Donnerstage ab START_DATUM bis zum Zieldatum."""
     aktuell = START_DATUM
     donnerstage = []
     while aktuell <= ziel_datum:
@@ -53,13 +50,11 @@ def alle_donnerstage_bis(ziel_datum: date):
 
 
 def berechne_rotation_fuer_datum(ziel_datum: date, daten: dict):
-    """Berechnet fair die Rollen für einen bestimmten Donnerstag unter Berücksichtigung von Ausfällen."""
     if ziel_datum.weekday() != 3:
-        return None  # Kein Donnerstag
+        return None
 
     ziel_str = ziel_datum.isoformat()
 
-    # 1. Wenn manuell angepasst, diese Werte priorisieren
     if ziel_str in daten.get("manuelle_anpassungen", {}):
         anpassung = daten["manuelle_anpassungen"][ziel_str]
         return {
@@ -71,7 +66,6 @@ def berechne_rotation_fuer_datum(ziel_datum: date, daten: dict):
             "manuell": True,
         }
 
-    # 2. Berechnen, wie viele AKTIVE (nicht ausgefallene) Donnerstage vorher lagen
     alle_ststage = alle_donnerstage_bis(ziel_datum)
     aktiver_index = 0
 
@@ -81,7 +75,6 @@ def berechne_rotation_fuer_datum(ziel_datum: date, daten: dict):
 
         if d == ziel_datum:
             if ist_ausfall:
-                # Fällt heute aus? Kein Zähler-Inkrement für Rotation
                 return {
                     "datum": ziel_datum,
                     "ausfall": True,
@@ -95,7 +88,6 @@ def berechne_rotation_fuer_datum(ziel_datum: date, daten: dict):
         if not ist_ausfall:
             aktiver_index += 1
 
-    # Rotation basierend auf aktiver_index
     personen = daten.get("personen", STANDARD_PERSONEN)
     n = len(personen)
 
@@ -114,18 +106,76 @@ def berechne_rotation_fuer_datum(ziel_datum: date, daten: dict):
 
 
 # ---------------------------------------------------------
-# Streamlit Benutzeroberfläche (UI)
+# Page Setup & Custom CSS Styling
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="Patho ServiceMGMT Rotation", page_icon="📅", layout="centered"
 )
 
+# Erweitertes CSS für graue Wochenenden und hübsche Rollen-Karten
 st.markdown(
-    "<h1 style='text-align: center;'>Patho ServiceMGMT Meeting Rotation</h1>",
+    """
+<style>
+    .stApp {
+        background-color: #f8f9fa;
+    }
+    .header-title {
+        text-align: center;
+        color: #1e293b;
+        font-weight: 700;
+        margin-bottom: 20px;
+    }
+    .role-card {
+        background-color: #ffffff;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        text-align: center;
+        border-top: 5px solid #3b82f6;
+    }
+    .role-card.mod { border-top-color: #3b82f6; }
+    .role-card.proto { border-top-color: #10b981; }
+    .role-card.pause { border-top-color: #f59e0b; }
+    .role-card.cancelled { border-top-color: #ef4444; background-color: #fef2f2; }
+    
+    .role-title {
+        font-size: 0.90rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #64748b;
+        margin-bottom: 8px;
+    }
+    .role-person {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #0f172a;
+    }
+    .weekend-cell {
+        background-color: #f1f5f9;
+        border-radius: 6px;
+        padding: 8px 0;
+        text-align: center;
+        color: #94a3b8;
+    }
+    .weekday-cell {
+        text-align: center;
+        padding: 8px 0;
+        color: #475569;
+    }
+</style>
+""",
     unsafe_allow_html=True,
 )
 
-# 1. Monats- & Jahresauswahl für den Kalender
+st.markdown(
+    "<h1 class='header-title'>Patho ServiceMGMT Rotation</h1>",
+    unsafe_allow_html=True,
+)
+
+# ---------------------------------------------------------
+# Monats- & Jahresauswahl
+# ---------------------------------------------------------
 heute = date.today()
 col_m, col_y = st.columns(2)
 
@@ -158,42 +208,50 @@ with col_y:
 
 st.divider()
 
-# Selected Date State initialisieren
+# Session State initialisieren
 if "selected_date" not in st.session_state:
     st.session_state["selected_date"] = None
 if "edit_mode" not in st.session_state:
     st.session_state["edit_mode"] = False
 
-# 2. Kalender darstellen
-cal = calendar.Calendar(firstweekday=0)  # Montag startet
+# ---------------------------------------------------------
+# Kalender-Darstellung
+# ---------------------------------------------------------
+cal = calendar.Calendar(firstweekday=0)
 monats_tage = cal.monthdatescalendar(
     ausgewaehltes_jahr, ausgewaehlter_monat_idx
 )
 
 st.markdown(
-    "### 📅 "
-    + monate[ausgewaehlter_monat_idx - 1]
-    + f" {ausgewaehltes_jahr}"
+    f"### 📅 {monate[ausgewaehlter_monat_idx - 1]} {ausgewaehltes_jahr}"
 )
 
 # Wochentage Header
 cols_header = st.columns(7)
 wochentage_kurz = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
 for i, col in enumerate(cols_header):
-    col.markdown(f"**{wochentage_kurz[i]}**")
+    # Wochenenden in Kopfzeile auch leicht färben
+    color = "#94a3b8" if i >= 5 else "#1e293b"
+    col.markdown(
+        f"<div style='text-align: center; color: {color}; font-weight: bold;'>{wochentage_kurz[i]}</div>",
+        unsafe_allow_html=True,
+    )
 
 # Tage rendern
 for woche in monats_tage:
     cols = st.columns(7)
     for i, tag in enumerate(woche):
         with cols[i]:
-            # Prüfen ob Tag im aktuellen Monat liegt
             if tag.month != ausgewaehlter_monat_idx:
-                st.caption(f"{tag.day}")
+                st.markdown(
+                    "<div class='weekday-cell' style='opacity: 0.2;'>•</div>",
+                    unsafe_allow_html=True,
+                )
                 continue
 
             tag_str = tag.isoformat()
             ist_donnerstag = tag.weekday() == 3
+            ist_wochenende = i >= 5
 
             if ist_donnerstag and tag >= START_DATUM:
                 rot = berechne_rotation_fuer_datum(tag, daten)
@@ -209,12 +267,24 @@ for woche in monats_tage:
                     st.session_state["selected_date"] = tag
                     st.session_state["edit_mode"] = False
                     st.rerun()
+            elif ist_wochenende:
+                # Leicht graues Wochenende
+                st.markdown(
+                    f"<div class='weekend-cell'>{tag.day}</div>",
+                    unsafe_allow_html=True,
+                )
             else:
-                st.text(f"{tag.day}")
+                # Regulärer Wochentag
+                st.markdown(
+                    f"<div class='weekday-cell'>{tag.day}</div>",
+                    unsafe_allow_html=True,
+                )
 
 st.divider()
 
-# 3. Details / Bearbeiten-Bereich für das gewählte Datum
+# ---------------------------------------------------------
+# Rollenanzeige & Details zum gewählten Tag
+# ---------------------------------------------------------
 sel_tag = st.session_state.get("selected_date")
 
 if sel_tag:
@@ -223,21 +293,23 @@ if sel_tag:
 
     head_col1, head_col2 = st.columns([3, 1])
     with head_col1:
-        st.subheader(f"Meeting am Donnerstag, {sel_tag.strftime('%d.%m.%Y')}")
+        st.markdown(
+            f"### Meeting am **{sel_tag.strftime('%d.%m.%Y')}**"
+        )
     with head_col2:
-        if st.button("✏️ Bearbeiten / Anpassen"):
+        if st.button("✏️ Bearbeiten"):
             st.session_state["edit_mode"] = not st.session_state["edit_mode"]
 
     # --- BEARBEITUNGS-MODUS ---
     if st.session_state["edit_mode"]:
-        st.info("🛠️ **Eingaben anpassen**")
+        st.info("🛠️ **Anpassung für diesen Tag**")
         with st.form("edit_form"):
             ist_ausfall_chk = st.checkbox(
-                "❌ Meeting fällt aus (Rotation verschiebt sich auf nächste Woche)",
+                "❌ Meeting fällt aus (Rotation verschiebt sich automatisch)",
                 value=rot_info["ausfall"],
             )
 
-            st.write("**Rollenverteilung anpassen:**")
+            st.write("**Eingeteilte Personen anpassen:**")
             mod_val = st.text_input(
                 "🎤 Moderierer",
                 value=rot_info["mod"] if not rot_info["ausfall"] else "Veronika",
@@ -254,7 +326,6 @@ if sel_tag:
             speichern_btn = st.form_submit_button("Speichern")
 
             if speichern_btn:
-                # Ausfall speichern / entfernen
                 if ist_ausfall_chk:
                     if sel_str not in daten["ausfaelle"]:
                         daten["ausfaelle"].append(sel_str)
@@ -262,7 +333,6 @@ if sel_tag:
                     if sel_str in daten["ausfaelle"]:
                         daten["ausfaelle"].remove(sel_str)
 
-                # Manuelle Rollen speichern
                 if "manuelle_anpassungen" not in daten:
                     daten["manuelle_anpassungen"] = {}
 
@@ -274,35 +344,61 @@ if sel_tag:
 
                 speichere_daten(daten)
                 st.session_state["edit_mode"] = False
-                st.success("Änderungen gespeichert!")
+                st.success("Erfolgreich gespeichert!")
                 st.rerun()
 
-    # --- ANZEIGE-MODUS ---
+    # --- ANZEIGE-MODUS (Farbige Kacheln) ---
     else:
         if rot_info["ausfall"]:
-            st.warning("⚠️ **Dieses Meeting fällt aus!**")
-            st.caption(
-                "Die geplante Rotation verschiebt sich automatisch auf den nächsten Donnerstag."
+            st.markdown(
+                """
+                <div class='role-card cancelled'>
+                    <div class='role-title' style='color: #ef4444;'>Meeting Status</div>
+                    <div class='role-person' style='color: #dc2626;'>❌ Abgesagt / Ausfall</div>
+                    <p style='color: #7f1d1d; margin-top: 8px; font-size: 0.9rem;'>
+                        Die Rotation wird für die darauffolgende Woche fortgesetzt.
+                    </p>
+                </div>
+                """,
+                unsafe_allow_html=True,
             )
         else:
             col_a, col_b, col_c = st.columns(3)
-            col_a.metric("🎤 Moderierer", rot_info["mod"])
-            col_b.metric("📝 Protokollierer", rot_info["proto"])
-            col_c.metric("☕ Pause", rot_info["pause"])
 
-            st.markdown("#### E-Mail Nachricht für Kolleginnen:")
-            mail_text = f"""Hallo zusammen,
+            with col_a:
+                st.markdown(
+                    f"""
+                    <div class='role-card mod'>
+                        <div class='role-title'>🎤 Moderierer</div>
+                        <div class='role-person'>{rot_info['mod']}</div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
 
-für das Patho ServiceMGMT Meeting am {sel_tag.strftime('%d.%m.%Y')} sind folgende Rollen eingeteilt:
+            with col_b:
+                st.markdown(
+                    f"""
+                    <div class='role-card proto'>
+                        <div class='role-title'>📝 Protokollierer</div>
+                        <div class='role-person'>{rot_info['proto']}</div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
 
-🎤 Moderierer:
-{rot_info['mod']}
-
-📝 Protokollierer:
-{rot_info['proto']}
-
-Vielen Dank!"""
-            st.code(mail_text, language="text")
+            with col_c:
+                st.markdown(
+                    f"""
+                    <div class='role-card pause'>
+                        <div class='role-title'>☕ Pause</div>
+                        <div class='role-person'>{rot_info['pause']}</div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
 
 else:
-    st.info("👈 Klicken Sie auf einen blau markierten Donnerstag (📌) im Kalender, um die Rollenverteilung zu sehen.")
+    st.info(
+        "👈 Klicken Sie auf einen blau markierten Donnerstag (📌) im Kalender, um die Rollenverteilung anzuzeigen."
+    )
