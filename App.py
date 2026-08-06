@@ -135,7 +135,7 @@ st.markdown(
         margin-bottom: 20px;
     }
 
-    /* KALENDER CARD WRAPPER - Bombenfestes 7-Spalten Grid */
+    /* KALENDER CARD WRAPPER */
     .calendar-card {
         background-color: #1C1B1A;
         border: 1px solid #3A3836;
@@ -176,7 +176,7 @@ st.markdown(
         background-color: #B52B2D;
     }
 
-    /* Direct HTML Grid */
+    /* Grid Layout */
     .cal-grid {
         display: grid;
         grid-template-columns: repeat(7, 1fr);
@@ -236,40 +236,39 @@ st.markdown(
         margin: 20px 0;
     }
 
-    /* LOWER SECTION: BÜNDIGER BEARBEITEN BUTTON */
-    .meeting-header-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 15px;
-    }
-
+    /* MEETING UNTERZEILE */
     .meeting-section-header {
         font-size: 1.25rem;
         font-weight: 700;
         color: #FFFFFF;
         display: flex;
         align-items: center;
-        gap: 8px;
+        height: 100%;
     }
 
-    /* Schlichter, dezenter Bearbeiten-Link/Button */
-    .bearbeiten-link-btn div.stButton > button {
-        background-color: transparent !important;
-        color: #4A90E2 !important;
-        border: none !important;
-        text-decoration: underline !important;
-        font-size: 0.95rem !important;
+    /* BEARBEITEN BUTTON: Rechtsbündig wie im Bild */
+    div[data-testid="column"]:has(.edit-button-wrapper) {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+    }
+
+    .edit-button-wrapper div.stButton > button {
+        background-color: #1C1B1A !important;
+        color: #FFFFFF !important;
+        border: 1px solid #3A3836 !important;
+        border-radius: 8px !important;
+        padding: 6px 16px !important;
+        font-size: 0.9rem !important;
         font-weight: 600 !important;
-        padding: 0 !important;
-        box-shadow: none !important;
-        height: auto !important;
-        cursor: pointer !important;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2) !important;
+        height: 38px !important;
+        margin: 0 !important;
     }
 
-    .bearbeiten-link-btn div.stButton > button:hover {
-        color: #6BA4E8 !important;
-        background-color: transparent !important;
+    .edit-button-wrapper div.stButton > button:hover {
+        border-color: #FFFFFF !important;
+        background-color: #2D2C2B !important;
     }
 
     /* Rollenkarten */
@@ -341,7 +340,7 @@ st.markdown(
 )
 
 # ---------------------------------------------------------
-# KALENDER CARD (Perfekt gerendert)
+# KALENDER CARD
 # ---------------------------------------------------------
 if current_month == 1:
     prev_m, prev_y = 12, current_year - 1
@@ -407,7 +406,9 @@ st.markdown("<div class='cal-divider'></div>", unsafe_allow_html=True)
 if selected_date and selected_date.weekday() == 3:
     rot_info = berechne_rotation_fuer_datum(selected_date, daten)
 
-    col_head, col_edit_btn = st.columns([5, 2])
+    # Überschrift links, Bearbeiten-Button rechts
+    col_head, col_edit_btn = st.columns([3, 1])
+
     with col_head:
         st.markdown(
             f"<div class='meeting-section-header'>👥 Meeting am {selected_date.strftime('%d.%m.%Y')}</div>",
@@ -415,11 +416,13 @@ if selected_date and selected_date.weekday() == 3:
         )
 
     with col_edit_btn:
-        st.markdown("<div class='bearbeiten-link-btn' style='text-align: right;'>", unsafe_allow_html=True)
+        st.markdown("<div class='edit-button-wrapper'>", unsafe_allow_html=True)
         if st.button("Bearbeiten", key="toggle_edit_mode"):
             st.session_state["edit_mode"] = not st.session_state["edit_mode"]
             st.rerun()
         st.markdown("</div>", unsafe_allow_html=True)
+
+    st.markdown("<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True)
 
     # Formular
     if st.session_state["edit_mode"]:
