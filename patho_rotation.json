@@ -1,15 +1,9 @@
 {
-  "letzte": {
-    "datum": "06.08.2026",
-    "mod": "Moritz",
-    "proto": "Lissi",
-    "pause": "Veronika"
-  },
-  "aktuell": {
-    "datum": "06.08.2026",
-    "mod": "Veronika",
-    "proto": "Moritz",
-    "pause": "Lissi"
-  },
-  "text": "Hallo zusammen,\n\nfür das Patho ServiceMGMT Meeting am 06.08.2026 sind folgende Rollen eingeteilt:\n\n🎤 Moderierer:\nVeronika\n\n📝 Protokollierer:\nMoritz\n\nVielen Dank!\n\n\n"
+  "personen": [
+    "Veronika",
+    "Moritz",
+    "Lissi"
+  ],
+  "ausfaelle": [],
+  "manuelle_anpassungen": {}
 }
