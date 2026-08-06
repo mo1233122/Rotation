@@ -8,7 +8,7 @@ import streamlit as st
 DATEI = Path(__file__).with_name("patho_rotation.json")
 
 STANDARD_PERSONEN = ["Moritz", "Lissi", "Veronika"]
-START_DATUM = date(2026, 8, 6)  # Erster bekannter Donnerstag
+START_DATUM = date(2026, 8, 6)
 
 
 # ---------------------------------------------------------
@@ -108,7 +108,7 @@ def berechne_rotation_fuer_datum(ziel_datum: date, daten: dict):
 
 
 # ---------------------------------------------------------
-# Page Setup & Styling
+# Page Setup & Clean CSS
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="Patho ServiceMGMT Rotation", page_icon="📅", layout="centered"
@@ -117,7 +117,7 @@ st.set_page_config(
 st.markdown(
     """
 <style>
-    /* Dunklerer/Warmer Greige Hintergrund */
+    /* Hintergrund & Grundstruktur */
     .stApp {
         background-color: #E6E1DA;
         color: #2D2B2A;
@@ -129,60 +129,65 @@ st.markdown(
         font-weight: 800;
         font-size: clamp(1.4rem, 4vw, 2.0rem);
         margin-top: -10px;
-        margin-bottom: 20px;
-        letter-spacing: -0.5px;
+        margin-bottom: 25px;
     }
 
-    /* Helle Kalender Card, die sich gut abhebt */
+    /* Weicher, heller Kalender-Behälter */
     .cal-card-wrapper {
         background-color: #FFFFFF;
         border-radius: 20px;
         padding: 24px;
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
         border: 1px solid #D8D2C9;
-        max-width: 520px;
+        max-width: 480px;
         margin: 0 auto;
     }
 
     .month-header {
-        font-size: 1.4rem;
+        font-size: 1.35rem;
         font-weight: 700;
         color: #1F1E1D;
     }
 
-    /* Pfeilbuttons oben rechts */
+    /* Pfeil-Buttons oben rechts */
     div[data-testid="stHorizontalBlock"] div.stButton > button {
         border-radius: 8px !important;
         background-color: #FF2A55 !important;
         color: white !important;
         border: none !important;
         font-weight: bold !important;
-        height: 38px !important;
-        width: 38px !important;
+        height: 36px !important;
+        width: 36px !important;
         padding: 0 !important;
     }
 
-    /* Donnerstags-Buttons (Neon-Rot/Rosa wie Bild) */
-    .thursday-btn button {
+    /* Trennlinie unter dem Monat */
+    .cal-divider {
+        border-bottom: 1px solid #E5E0D8;
+        margin: 15px 0 10px 0;
+    }
+
+    /* Einheits-Button für Donnerstage in Streamlit */
+    .thursday-btn-wrapper div.stButton > button {
         background-color: #FF2A55 !important;
         color: white !important;
         border-radius: 8px !important;
         border: none !important;
         font-weight: 700 !important;
-        height: 36px !important;
-        width: 36px !important;
+        height: 32px !important;
+        width: 32px !important;
         margin: 0 auto !important;
-        display: block !important;
-        box-shadow: 0 4px 10px rgba(255, 42, 85, 0.3) !important;
+        padding: 0 !important;
+        box-shadow: 0 3px 8px rgba(255, 42, 85, 0.3) !important;
     }
-    .thursday-btn.cancelled button {
+    .thursday-btn-wrapper.cancelled div.stButton > button {
         background-color: #8C857B !important;
         box-shadow: none !important;
     }
 
-    /* Wochenend-Spalten sauber grau hinterlegt */
-    .cal-cell {
-        height: 44px;
+    /* Zellen styling */
+    .cal-cell-text {
+        height: 32px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -190,22 +195,24 @@ st.markdown(
         font-size: 0.95rem;
         color: #383533;
     }
-    .cal-cell.weekend {
+    .cal-cell-text.weekend {
         background-color: #F2EFE9;
+        border-radius: 4px;
     }
-    .cal-cell.empty {
+    .cal-cell-text.empty {
         opacity: 0.15;
     }
 
-    .cal-header-cell {
+    .cal-header-text {
         font-weight: 700;
-        font-size: 0.9rem;
-        padding: 8px 0;
+        font-size: 0.85rem;
         text-align: center;
         color: #5C5650;
+        padding: 4px 0;
     }
-    .cal-header-cell.weekend {
+    .cal-header-text.weekend {
         background-color: #F2EFE9;
+        border-radius: 4px 4px 0 0;
     }
 
     /* Rollenkarten */
@@ -213,7 +220,7 @@ st.markdown(
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 12px;
-        margin-top: 15px;
+        margin-top: 20px;
     }
 
     .role-card {
@@ -223,9 +230,8 @@ st.markdown(
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
         text-align: center;
         border: 1px solid #D8D2C9;
-        border-top: 4px solid #3B82F6;
+        border-top: 4px solid #FF2A55;
     }
-    .role-card.mod { border-top-color: #FF2A55; }
     .role-card.proto { border-top-color: #10B981; }
     .role-card.pause { border-top-color: #F59E0B; }
     .role-card.cancelled { 
@@ -239,12 +245,11 @@ st.markdown(
         font-size: 0.75rem;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
         color: #78726A;
         margin-bottom: 4px;
     }
     .role-person {
-        font-size: 1.3rem;
+        font-size: 1.25rem;
         font-weight: 700;
         color: #1F1E1D;
     }
@@ -264,7 +269,7 @@ st.markdown(
 )
 
 # ---------------------------------------------------------
-# Session State Management
+# Session State
 # ---------------------------------------------------------
 heute = date.today()
 
@@ -297,11 +302,11 @@ monate_namen = [
 ]
 
 # ---------------------------------------------------------
-# Kalender UI
+# Kalender Container
 # ---------------------------------------------------------
 st.markdown("<div class='cal-card-wrapper'>", unsafe_allow_html=True)
 
-# Monatszeile & Pfeiltasten
+# Monatszeile + Pfeile
 col_title, col_prev, col_next = st.columns([5, 1, 1])
 
 with col_title:
@@ -317,9 +322,7 @@ with col_prev:
             st.session_state["current_year"] -= 1
         else:
             st.session_state["current_month"] -= 1
-        st.session_state["selected_date"] = (
-            None  # Datum beim Monatswechsel zurücksetzen
-        )
+        st.session_state["selected_date"] = None
         st.session_state["edit_mode"] = False
         st.rerun()
 
@@ -330,24 +333,24 @@ with col_next:
             st.session_state["current_year"] += 1
         else:
             st.session_state["current_month"] += 1
-        st.session_state["selected_date"] = (
-            None  # Datum beim Monatswechsel zurücksetzen
-        )
+        st.session_state["selected_date"] = None
         st.session_state["edit_mode"] = False
         st.rerun()
 
-# Wochentage Header
-cols_header = st.columns(7)
-wochentage_kurz = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]
+# Trennstrich nach Monat / Pfeilen
+st.markdown("<div class='cal-divider'></div>", unsafe_allow_html=True)
 
+# Kalender Kopfzeile (Wochentage)
+wochentage_kurz = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]
+cols_header = st.columns(7)
 for i, col in enumerate(cols_header):
     is_weekend = i >= 5
-    css = "cal-header-cell weekend" if is_weekend else "cal-header-cell"
+    css = "cal-header-text weekend" if is_weekend else "cal-header-text"
     col.markdown(
         f"<div class='{css}'>{wochentage_kurz[i]}</div>", unsafe_allow_html=True
     )
 
-# Tage durchgehen
+# Tage Rendern
 cal = calendar.Calendar(firstweekday=0)
 monats_tage = cal.monthdatescalendar(
     st.session_state["current_year"], st.session_state["current_month"]
@@ -360,9 +363,10 @@ for woche in monats_tage:
             is_weekend = i >= 5
             weekend_class = "weekend" if is_weekend else ""
 
+            # Tage anderer Monate
             if tag.month != st.session_state["current_month"]:
                 st.markdown(
-                    f"<div class='cal-cell empty {weekend_class}'>•</div>",
+                    f"<div class='cal-cell-text empty {weekend_class}'>•</div>",
                     unsafe_allow_html=True,
                 )
                 continue
@@ -370,12 +374,13 @@ for woche in monats_tage:
             tag_str = tag.isoformat()
             ist_donnerstag = tag.weekday() == 3
 
+            # Donnerstage mit interaktivem Button
             if ist_donnerstag and tag >= START_DATUM:
                 rot = berechne_rotation_fuer_datum(tag, daten)
                 btn_class = "cancelled" if rot["ausfall"] else ""
 
                 st.markdown(
-                    f"<div class='cal-cell thursday-btn {btn_class} {weekend_class}'>",
+                    f"<div class='thursday-btn-wrapper {btn_class}'>",
                     unsafe_allow_html=True,
                 )
                 if st.button(f"{tag.day}", key=f"btn_{tag_str}"):
@@ -384,19 +389,19 @@ for woche in monats_tage:
                     st.rerun()
                 st.markdown("</div>", unsafe_allow_html=True)
             else:
+                # Normale Tage & Wochenenden
                 st.markdown(
-                    f"<div class='cal-cell {weekend_class}'>{tag.day}</div>",
+                    f"<div class='cal-cell-text {weekend_class}'>{tag.day}</div>",
                     unsafe_allow_html=True,
                 )
 
-st.markdown("</div>", unsafe_allow_html=True)  # Ende Card-Wrapper
+st.markdown("</div>", unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# Rollenanzeige (ERST WENN EIN DATUM GEWÄHLT WURDE)
+# Rollenanzeige (NUR WENN EIN DATUM IM AKTUELLEN MONAT GEWÄHLT IST)
 # ---------------------------------------------------------
 sel_tag = st.session_state.get("selected_date")
 
-# Sicherheitsprüfung: Nur anzeigen, wenn das gewählte Datum auch im aktuell angezeigten Monat liegt
 if (
     sel_tag
     and sel_tag.month == st.session_state["current_month"]
