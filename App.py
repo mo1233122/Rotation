@@ -288,7 +288,6 @@ st.markdown(
         grid-column: span 3;
     }
 
-    /* HIER VERGRÖSSERT: Rollen-Titel (Icon + text) */
     .role-title {
         font-size: 0.98rem;
         font-weight: 700;
@@ -299,6 +298,40 @@ st.markdown(
         font-size: 1.25rem;
         font-weight: 700;
         color: #FFFFFF;
+    }
+
+    /* INFO AREA BOTTOM */
+    .info-card {
+        background-color: #1C1B1A;
+        border: 1px solid #333230;
+        border-radius: 10px;
+        padding: 16px 20px;
+        margin-top: 5px;
+    }
+
+    .info-card-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #D9383A;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .info-card-list {
+        margin: 0;
+        padding-left: 18px;
+        color: #B0B0B0;
+        font-size: 0.85rem;
+        line-height: 1.5;
+    }
+
+    .info-card-list li {
+        margin-bottom: 4px;
+    }
+    .info-card-list li:last-child {
+        margin-bottom: 0;
     }
 </style>
 """,
@@ -510,3 +543,22 @@ if selected_date and selected_date.weekday() == 3:
         st.session_state["edit_mode"] = not st.session_state["edit_mode"]
         st.rerun()
     st.markdown("</div>", unsafe_allow_html=True)
+
+# ---------------------------------------------------------
+# ZWEITER TRENNSTRICH & INFO BEREICH
+# ---------------------------------------------------------
+st.markdown("<div class='cal-divider'></div>", unsafe_allow_html=True)
+
+st.markdown(
+    """
+<div class="info-card">
+    <div class="info-card-title">ℹ️ Funktionsweise & Rotation</div>
+    <ul class="info-card-list">
+        <li><b>Automatische Rotation:</b> Die Rollen (Moderator*in, Protokollant*in, Pause) rotieren jeden Donnerstag automatisch unter Moritz, Lissi und Veronika.</li>
+        <li><b>Manuelle Anpassung:</b> Über <u>Bearbeiten</u> lassen sich Rollen für ein gewähltes Datum individuell festlegen. Nachfolgende Donnerstage passen sich automatisch an.</li>
+        <li><b>Ausfälle:</b> Fällt ein Meeting aus, pausiert der Turnus für diese Woche und wird am nächsten Donnerstag nahtlos fortgesetzt.</li>
+    </ul>
+</div>
+""",
+    unsafe_allow_html=True,
+)
