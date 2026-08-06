@@ -105,7 +105,7 @@ def berechne_rotation_fuer_datum(ziel_datum: date, daten: dict):
 
 
 # ---------------------------------------------------------
-# Page Setup & CSS (Edles Layout & Perfektes Raster)
+# Page Setup & CSS
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="NXP ServiceMGMT Meeting Rotation",
@@ -122,17 +122,21 @@ st.markdown(
         color: #FFFFFF;
     }
 
+    /* Breiterer Container, damit die Überschrift NIEMALS umbricht */
     .main .block-container {
-        max-width: 680px !important;
+        max-width: 720px !important;
         padding-top: 2rem !important;
     }
 
-    /* Überschrift */
+    /* Überschrift in EINER ZEILE garantiert */
     .header-title {
         color: #FFFFFF;
         font-weight: 800;
         font-size: 1.8rem;
         margin-bottom: 20px;
+        white-space: nowrap !important;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     /* KALENDER CARD WRAPPER */
@@ -241,34 +245,27 @@ st.markdown(
         font-size: 1.25rem;
         font-weight: 700;
         color: #FFFFFF;
-        display: flex;
-        align-items: center;
-        height: 100%;
+        margin-bottom: 15px;
     }
 
-    /* BEARBEITEN BUTTON: Rechtsbündig wie im Bild */
-    div[data-testid="column"]:has(.edit-button-wrapper) {
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-    }
-
-    .edit-button-wrapper div.stButton > button {
-        background-color: #1C1B1A !important;
-        color: #FFFFFF !important;
-        border: 1px solid #3A3836 !important;
-        border-radius: 8px !important;
-        padding: 6px 16px !important;
+    /* LINK UNTER DEN ROLLEN (Links bündig) */
+    .edit-text-link div.stButton > button {
+        background-color: transparent !important;
+        color: #A0A0A0 !important;
+        border: none !important;
+        text-decoration: underline !important;
         font-size: 0.9rem !important;
-        font-weight: 600 !important;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2) !important;
-        height: 38px !important;
-        margin: 0 !important;
+        font-weight: 500 !important;
+        padding: 0 !important;
+        margin-top: 15px !important;
+        box-shadow: none !important;
+        height: auto !important;
+        cursor: pointer !important;
     }
 
-    .edit-button-wrapper div.stButton > button:hover {
-        border-color: #FFFFFF !important;
-        background-color: #2D2C2B !important;
+    .edit-text-link div.stButton > button:hover {
+        color: #FFFFFF !important;
+        background-color: transparent !important;
     }
 
     /* Rollenkarten */
@@ -333,7 +330,7 @@ monate_namen = [
     "Juli", "August", "September", "Oktober", "November", "Dezember"
 ]
 
-# Title
+# Title - GARANTIERT EINZEILIG
 st.markdown(
     "<h1 class='header-title'>NXP ServiceMGMT Meeting Rotation</h1>",
     unsafe_allow_html=True,
@@ -406,25 +403,13 @@ st.markdown("<div class='cal-divider'></div>", unsafe_allow_html=True)
 if selected_date and selected_date.weekday() == 3:
     rot_info = berechne_rotation_fuer_datum(selected_date, daten)
 
-    # Überschrift links, Bearbeiten-Button rechts
-    col_head, col_edit_btn = st.columns([3, 1])
+    # Überschrift alleine in ihrer Zeile
+    st.markdown(
+        f"<div class='meeting-section-header'>👥 Meeting am {selected_date.strftime('%d.%m.%Y')}</div>",
+        unsafe_allow_html=True,
+    )
 
-    with col_head:
-        st.markdown(
-            f"<div class='meeting-section-header'>👥 Meeting am {selected_date.strftime('%d.%m.%Y')}</div>",
-            unsafe_allow_html=True,
-        )
-
-    with col_edit_btn:
-        st.markdown("<div class='edit-button-wrapper'>", unsafe_allow_html=True)
-        if st.button("Bearbeiten", key="toggle_edit_mode"):
-            st.session_state["edit_mode"] = not st.session_state["edit_mode"]
-            st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    st.markdown("<div style='margin-bottom: 12px;'></div>", unsafe_allow_html=True)
-
-    # Formular
+    # Bearbeitungs-Formular (falls offen)
     if st.session_state["edit_mode"]:
         st.info("🛠️ **Anpassung für diesen Tag**")
         with st.form("edit_form"):
@@ -520,3 +505,11 @@ if selected_date and selected_date.weekday() == 3:
                 """,
                 unsafe_allow_html=True,
             )
+
+    # LINKSBÜNDIGER TEXT-LINK UNTER DEN ROLLEN
+    st.markdown("<div class='edit-text-link'>", unsafe_allow_html=True)
+    btn_text = "Abbrechen" if st.session_state["edit_mode"] else "Bearbeiten"
+    if st.button(btn_text, key="toggle_edit_mode"):
+        st.session_state["edit_mode"] = not st.session_state["edit_mode"]
+        st.rerun()
+    st.markdown("</div>", unsafe_allow_html=True)
