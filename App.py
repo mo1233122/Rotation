@@ -597,22 +597,20 @@ jahr_str_anzeige = str(selected_date.year) if selected_date else "2026"
 
 st.subheader("📋 ToDos nach NXP Service MGMT Meeting")
 
-st.markdown("### 1. Abgeschlossene Punkte ins Archiv verschieben")
+st.markdown("#### 1. Abgeschlossene Punkte ins Archiv verschieben")
 
-st.markdown("### 2. Protokoll als PDF exportieren")
+st.markdown("#### 2. Protokoll als PDF exportieren")
 st.caption("Name für PDF-Protokoll (zum Kopieren anklicken):")
 st.code(f"{datum_str_anzeige} NXP Service MGMT Meeting.pdf", language=None)
 
-st.markdown("### 3. PDF-Protokoll abspeichern")
+st.markdown("#### 3. PDF-Protokoll abspeichern")
 st.caption("Dateipfad (zum Kopieren anklicken):")
 st.code(
     f"\\\\xtgroup.local\\xtgDATA\\x-tention\\xtention\\Kunden\\NÖ Landeskliniken Holding\\K140383 - NÖ SWISSLAB CCC\\02_Betrieb\\12_Patho Betrieb\\01 JF Protokolle Besprechungen\\Service Management Meeting Protokolle\\{jahr_str_anzeige}",
     language=None,
 )
-st.caption("Dateiname (zum Kopieren anklicken):")
-st.code(f"{datum_str_anzeige} NXP Service MGMT Meeting.pdf", language=None)
 
-st.markdown("### 4. Protokoll aussenden")
+st.markdown("#### 4. Protokoll aussenden")
 st.markdown(
     "**Empfänger:** Outlook Kontaktgruppe *'NXP Service MGMT Meeting'*"
 )
