@@ -609,6 +609,8 @@ st.code(
     f"\\\\xtgroup.local\\xtgDATA\\x-tention\\xtention\\Kunden\\NÖ Landeskliniken Holding\\K140383 - NÖ SWISSLAB CCC\\02_Betrieb\\12_Patho Betrieb\\01 JF Protokolle\\Service Management Meeting Protokolle\\{jahr_str_anzeige}",
     language=None,
 )
+st.caption("Dateiname (zum Kopieren anklicken):")
+st.code(f"{datum_str_anzeige} NXP Service MGMT Meeting.pdf", language=None)
 
 st.markdown("**4. Protokoll aussenden**")
 st.markdown(
@@ -620,6 +622,12 @@ st.code(
     f"Protokoll – NXP Service MGMT Meeting – {datum_str_anzeige}", language=None
 )
 
+absender_name = st.selectbox(
+    "Absender*in für Mail-Template auswählen:",
+    ["Elisabeth Pritz", "Veronika Wallner", "Moritz Strasser", "[Dein Name]"],
+    index=0,
+)
+
 st.caption("Mail-Template (zum Kopieren anklicken):")
 st.code(
     f"""Liebe Angeschriebene,
@@ -627,6 +635,6 @@ st.code(
 anbei findet ihr das Protokoll des NXP Service MGMT Meetings von heute, {datum_str_anzeige}.
 
 Mit besten Grüßen
-[Dein Name]""",
+{absender_name}""",
     language=None,
 )
