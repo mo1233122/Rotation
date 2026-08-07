@@ -7,7 +7,8 @@ import streamlit as st
 # Speicherdatei-Pfad
 DATEI = Path(__file__).with_name("patho_rotation.json")
 
-STANDARD_PERSONEN = ["Moritz", "Lissi", "Veronika"]
+# Reihenfolge angepasst: Lissi, Veronika, Moritz
+STANDARD_PERSONEN = ["Lissi", "Veronika", "Moritz"]
 START_DATUM = date(2026, 8, 6)
 
 
@@ -576,9 +577,10 @@ st.markdown(
 <div class="info-card">
     <div class="info-card-title">ℹ️ Funktionsweise & Rotation</div>
     <ul class="info-card-list">
-        <li><b>Automatische Rotation:</b> Die Rollen (Moderator*in, Protokollant*in, Pause) rotieren jeden Donnerstag automatisch unter Moritz, Lissi und Veronika.</li>
+        <li><b>Automatische Rotation:</b> Die Rollen (Moderator*in, Protokollant*in, Pause) rotieren jeden Donnerstag automatisch unter Lissi, Veronika, Moritz.</li>
         <li><b>Manuelle Anpassung:</b> Über <u>Bearbeiten</u> lassen sich Rollen für ein gewähltes Datum individuell festlegen. Nachfolgende Donnerstage passen sich automatisch an.</li>
         <li><b>Ausfälle:</b> Fällt ein Meeting aus, pausiert der Turnus für diese Woche und wird am nächsten Donnerstag nahtlos fortgesetzt.</li>
+        <li><b>Dynamische Vorlagen:</b> Sobald oben ein Donnerstag gewählt wird, passen sich Datum und Pfad im ToDo-Bereich unten automatisch an. Über das Namens-Dropdown lässt sich zudem der Absender im Mail-Text direkt einsetzen.</li>
     </ul>
 </div>
 """,
