@@ -342,6 +342,38 @@ st.markdown(
     .info-card-list li:last-child {
         margin-bottom: 0;
     }
+
+    /* TODO ANLEITUNG STYLES */
+    .todo-step {
+        margin-bottom: 14px;
+        color: #D0D0D0;
+        font-size: 0.88rem;
+        line-height: 1.5;
+    }
+    .todo-step-title {
+        font-weight: 700;
+        color: #FFFFFF;
+        font-size: 0.92rem;
+        margin-bottom: 4px;
+    }
+    .highlight-yellow {
+        background-color: #F1C40F;
+        color: #000000;
+        font-weight: 700;
+        padding: 1px 5px;
+        border-radius: 4px;
+    }
+    .code-box {
+        background-color: #121111;
+        border: 1px solid #2D2B2A;
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-family: monospace;
+        font-size: 0.82rem;
+        color: #2ECC71;
+        word-break: break-all;
+        margin-top: 4px;
+    }
 </style>
 """,
     unsafe_allow_html=True,
@@ -562,7 +594,7 @@ if selected_date and selected_date.weekday() == 3 and selected_date >= START_DAT
 else:
     # Hinweistext, wenn noch kein Tag ausgewählt wurde
     st.markdown(
-        "<div class='placeholder-hint'>💡 Wähle einen Donnerstag im Kalender aus, um die Rotation anzuzeigen.</div>",
+        "<div class='placeholder-hint'>💡 Wähle einen Donnerstag im Kalender aus, um die Rollenverteilung anzuzeigen.</div>",
         unsafe_allow_html=True,
     )
 
@@ -580,6 +612,56 @@ st.markdown(
         <li><b>Manuelle Anpassung:</b> Über <u>Bearbeiten</u> lassen sich Rollen für ein gewähltes Datum individuell festlegen. Nachfolgende Donnerstage passen sich automatisch an.</li>
         <li><b>Ausfälle:</b> Fällt ein Meeting aus, pausiert der Turnus für diese Woche und wird am nächsten Donnerstag nahtlos fortgesetzt.</li>
     </ul>
+</div>
+""",
+    unsafe_allow_html=True,
+)
+
+# ---------------------------------------------------------
+# DRITTER TRENNSTRICH & TODO ANLEITUNG
+# ---------------------------------------------------------
+st.markdown("<div class='cal-divider'></div>", unsafe_allow_html=True)
+
+# Formatierung für dynamisches Datum (falls gewählt) oder Platzhalter
+datum_str_anzeige = (
+    selected_date.strftime("%Y-%m-%d") if selected_date else "YYYY-MM-DD"
+)
+jahr_str_anzeige = str(selected_date.year) if selected_date else "2026"
+
+st.markdown(
+    f"""
+<div class="info-card">
+    <div class="info-card-title" style="color: #4A90E2;">📋 ToDos nach NXP Service MGMT Meeting</div>
+    
+    <div class="todo-step">
+        <div class="todo-step-title">1. Abgeschlossene Punkte ins Archiv verschieben</div>
+    </div>
+    
+    <div class="todo-step">
+        <div class="todo-step-title">2. Protokoll als PDF exportieren</div>
+        <div>Dateiname für PDF-Protokoll:</div>
+        <div class="code-box">{datum_str_anzeige} NXP Service MGMT Meeting.pdf</div>
+    </div>
+    
+    <div class="todo-step">
+        <div class="todo-step-title">3. PDF Protokoll abspeichern</div>
+        <div>Dateipfad:</div>
+        <div class="code-box">\\\\xtgroup.local\\xtgDATA\\x-tention\\xtention\\Kunden\\NÖ Landeskliniken Holding\\K140383 - NÖ SWISSLAB CCC\\02_Betrieb\\12_Patho Betrieb\\01 JF Protokolle\\Service Management Meeting Protokolle\\{jahr_str_anzeige}</div>
+    </div>
+    
+    <div class="todo-step">
+        <div class="todo-step-title">4. Protokoll aussenden</div>
+        <div><b>Empfänger:</b> Outlook Kontaktgruppe <i>"NXP Service MGMT Meeting"</i></div>
+        <div style="margin-top: 6px;"><b>Betreff:</b></div>
+        <div class="code-box">Protokoll – NXP Service MGMT Meeting – {datum_str_anzeige}</div>
+        <div style="margin-top: 6px;"><b>Mail-Template:</b></div>
+        <div class="code-box" style="color: #D0D0D0; white-space: pre-wrap;">Liebe Angeschriebene,
+
+anbei findet ihr das Protokoll des NXP Service MGMT Meetings von heute, {datum_str_anzeige}.
+
+Mit besten Grüßen
+<span class="highlight-yellow">[Dein Name]</span></div>
+    </div>
 </div>
 """,
     unsafe_allow_html=True,
